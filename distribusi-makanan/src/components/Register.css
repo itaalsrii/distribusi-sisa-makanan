@@ -1,0 +1,172 @@
+.register-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: #f3f4f6;
+}
+
+.register-card {
+  width: 100%;
+  max-width: 520px;
+  background: #16171a;
+  border-radius: 20px;
+  padding: 28px 32px;
+  color: #ffffff;
+  text-align: left;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.register-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.register-logo {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 6px;
+  background: #c53530;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.register-logo svg {
+  width: 38px;
+  height: 38px;
+}
+
+.register-brand {
+  margin: 0;
+  color: #c53530;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.register-title {
+  margin: 4px 0 0;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 14px;
+  flex: 1;
+  min-width: 0;
+}
+
+.form-row {
+  display: flex;
+  gap: 14px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.form-group input {
+  width: 100%;
+  background: #29292c;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #ffffff;
+  outline: none;
+}
+
+.form-group input::placeholder {
+  color: #9a9a9f;
+}
+
+.form-group input:focus {
+  border-color: #c53530;
+}
+
+.password-wrap {
+  position: relative;
+  display: flex;
+}
+
+.password-wrap input {
+  padding-right: 40px;
+}
+
+.toggle-eye {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 4px;
+  color: #9a9a9f;
+  cursor: pointer;
+  display: flex;
+}
+
+.toggle-eye:hover {
+  color: #ffffff;
+}
+
+.toggle-eye svg {
+  width: 18px;
+  height: 18px;
+}
+
+.form-error {
+  color: #ff6b6b;
+  font-size: 13px;
+  margin: 0 0 10px;
+  text-align: center;
+}
+
+.btn-daftar {
+  width: 100%;
+  background: #c53530;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.btn-daftar:hover {
+  background: #a82b27;
+}
+
+.register-footer {
+  text-align: center;
+  color: #9a9a9f;
+  font-size: 13px;
+  margin: 16px 0 0;
+}
+
+.register-footer a {
+  color: #e04b46;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+@media (max-width: 560px) {
+  .register-card {
+    padding: 24px 18px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+}
