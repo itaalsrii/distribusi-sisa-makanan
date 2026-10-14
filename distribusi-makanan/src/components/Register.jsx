@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import "./Register.css";
 
 function EyeIcon({ open }) {
@@ -61,37 +62,75 @@ function PasswordField({ id, label, value, onChange }) {
 }
 
 function Register() {
-  const [form, setForm] = useState({
-    namaUsaha: "",
-    namaPemilik: "",
-    email: "",
-    noHp: "",
-    alamat: "",
-    password: "",
-    konfirmasi: "",
-  });
+  const navigate = useNavigate();
+const [form, setForm] = useState({
+  namaUsaha: "",
+  namaPemilik: "",
+  username: "",
+  email: "",
+  noHp: "",
+  alamat: "",
+  password: "",
+  konfirmasi: "",
+});
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
 
-    if (form.password.length < 8) {
-      setError("Kata sandi minimal 8 karakter.");
-      return;
-    }
-    if (form.password !== form.konfirmasi) {
-      setError("Konfirmasi sandi tidak sama dengan kata sandi.");
-      return;
-    }
+const handleSubmit = (e) => {
+  e.preventDefault();
 
-    setError("");
-    console.log("Data registrasi:", form);
-    alert("Registrasi berhasil (sementara baru tampil di console).");
+  if (form.password.length < 8) {
+    setError("Kata sandi minimal 8 karakter.");
+    return;
+  }
+
+  if (form.password !== form.konfirmasi) {
+    setError("Konfirmasi sandi tidak sama dengan kata sandi.");
+    return;
+  }
+
+  const accounts = JSON.parse(
+    localStorage.getItem("surplus_accounts") || "[]"
+  );
+
+  const username = form.username.trim();
+  const email = form.email.trim().toLowerCase();
+
+  const alreadyExists = accounts.some(
+    (account) =>
+      account.username.toLowerCase() === username.toLowerCase() ||
+      account.email.toLowerCase() === email
+  );
+
+  if (alreadyExists) {
+    setError("Username atau email sudah terdaftar.");
+    return;
+  }
+
+  const newAccount = {
+    namaUsaha: form.namaUsaha,
+    namaPemilik: form.namaPemilik,
+    username,
+    email,
+    noHp: form.noHp,
+    alamat: form.alamat,
+    password: form.password,
   };
+
+  localStorage.setItem(
+    "surplus_accounts",
+    JSON.stringify([...accounts, newAccount])
+  );
+
+  setError("");
+  alert("Registrasi berhasil! Silakan login dengan akun Anda.");
+  navigate("/");
+};
+
 
   return (
     <div className="register-page">
@@ -151,6 +190,21 @@ function Register() {
             required
           />
         </div>
+
+        
+<div className="form-group">
+  <label htmlFor="username">Username</label>
+  <input
+    id="username"
+    name="username"
+    type="text"
+    placeholder="Buat username Anda"
+    value={form.username}
+    onChange={handleChange}
+    required
+  />
+</div>
+
 
         <div className="form-row">
           <div className="form-group">
@@ -213,9 +267,10 @@ function Register() {
           Daftar Sebagai Mitra
         </button>
 
-        <p className="register-footer">
-          Sudah punya akun? <a href="#">Masuk Sekarang</a>
-        </p>
+        
+<p className="register-footer">
+  Sudah punya akun? <Link to="/">Masuk Sekarang</Link>
+</p>
       </form>
     </div>
   );
