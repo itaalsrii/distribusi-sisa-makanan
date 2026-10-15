@@ -158,10 +158,7 @@ const handleSubmit = (e) => {
 
         {error && <p className="form-error">{error}</p>}
 
-        <button type="submit" className="btn-login">
-          Login
-        </button>
-
+        <button type="submit" className="btn-login">Login</button>
 
 <p className="login-footer">
   Belum punya akun? <Link to="/register">Daftar Sekarang</Link>
