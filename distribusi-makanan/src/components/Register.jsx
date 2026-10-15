@@ -77,60 +77,65 @@ const [form, setForm] = useState({
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    if (error) setError("");
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-const handleSubmit = (e) => {
-  e.preventDefault();
+    const noHp = form.noHp.replace(/[\s-]/g, "");
+    if (!/^(\+62|62|0)8[1-9][0-9]{7,11}$/.test(noHp)) {
+      setError("Nomor HP/WhatsApp tidak valid. Contoh: 082345678910.");
+      return;
+    }
 
-  if (form.password.length < 8) {
-    setError("Kata sandi minimal 8 karakter.");
-    return;
-  }
+    if (form.password.length < 8) {
+      setError("Kata sandi minimal 8 karakter.");
+      return;
+    }
 
-  if (form.password !== form.konfirmasi) {
-    setError("Konfirmasi sandi tidak sama dengan kata sandi.");
-    return;
-  }
+    if (form.password !== form.konfirmasi) {
+      setError("Konfirmasi sandi tidak sama dengan kata sandi.");
+      return;
+    }
 
-  const accounts = JSON.parse(
-    localStorage.getItem("surplus_accounts") || "[]"
-  );
+    const accounts = JSON.parse(
+      localStorage.getItem("surplus_accounts") || "[]"
+    );
 
-  const username = form.username.trim();
-  const email = form.email.trim().toLowerCase();
+    const username = form.username.trim();
+    const email = form.email.trim().toLowerCase();
 
-  const alreadyExists = accounts.some(
-    (account) =>
-      account.username.toLowerCase() === username.toLowerCase() ||
-      account.email.toLowerCase() === email
-  );
+    const alreadyExists = accounts.some(
+      (account) =>
+        account.username.toLowerCase() === username.toLowerCase() ||
+        account.email.toLowerCase() === email
+    );
 
-  if (alreadyExists) {
-    setError("Username atau email sudah terdaftar.");
-    return;
-  }
+    if (alreadyExists) {
+      setError("Username atau email sudah terdaftar.");
+      return;
+    }
 
-  const newAccount = {
-    namaUsaha: form.namaUsaha,
-    namaPemilik: form.namaPemilik,
-    username,
-    email,
-    noHp: form.noHp,
-    alamat: form.alamat,
-    password: form.password,
+    const newAccount = {
+      namaUsaha: form.namaUsaha.trim(),
+      namaPemilik: form.namaPemilik.trim(),
+      username,
+      email,
+      noHp,
+      alamat: form.alamat.trim(),
+      password: form.password,
+    };
+
+    localStorage.setItem(
+      "surplus_accounts",
+      JSON.stringify([...accounts, newAccount])
+    );
+
+    setError("");
+    alert("Registrasi berhasil! Silakan login dengan akun Anda.");
+    navigate("/");
   };
-
-  localStorage.setItem(
-    "surplus_accounts",
-    JSON.stringify([...accounts, newAccount])
-  );
-
-  setError("");
-  alert("Registrasi berhasil! Silakan login dengan akun Anda.");
-  navigate("/");
-};
-
 
   return (
     <div className="register-page">
