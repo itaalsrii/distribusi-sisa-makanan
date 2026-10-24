@@ -1,169 +1,185 @@
+
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./Login.css";
 
-function EyeIcon({ open }) {
-  return open ? (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  ) : (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a19.8 19.8 0 0 1 5.06-5.94M9.9 4.24A10.9 10.9 0 0 1 12 4c7 0 11 7 11 7a19.8 19.8 0 0 1-3.17 4.19M14.12 14.12a3 3 0 1 1-4.24-4.24" />
-      <line x1="1" y1="1" x2="23" y2="23" />
-    </svg>
-  );
-}
-
 function Login() {
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({
     username: "",
     password: "",
   });
 
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    setForm((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError("");
 
-const handleSubmit = (e) => {
-  e.preventDefault();
+    const username = form.username.trim().toLowerCase();
+    const password = form.password;
 
-  const accounts = JSON.parse(
-    localStorage.getItem("surplus_accounts") || "[]"
-  );
+    if (!username || !password) {
+      setError("Username/email dan password wajib diisi.");
+      return;
+    }
 
-  const username = form.username.trim();
+    // Akun Admin bawaan
+    if (username === "admin" && password === "Admin123!") {
+      localStorage.setItem(
+        "surplus_session",
+        JSON.stringify({
+          username: "admin",
+          nama: "Admin Surplus",
+          role: "admin",
+        })
+      );
 
-  const account = accounts.find(
-    (item) =>
-      item.username.toLowerCase() === username.toLowerCase() &&
-      item.password === form.password
-  );
+      navigate("/admin");
+      return;
+    }
 
-  if (!account) {
-    setError("Username atau password salah. Silakan coba lagi.");
-    return;
-  }
+    // Ambil akun Mitra yang sudah terdaftar
+    let accounts = [];
 
-  setError("");
-  alert(`Login berhasil! Selamat datang, ${account.namaPemilik}.`);
-};
+    try {
+      accounts = JSON.parse(
+        localStorage.getItem("surplus_accounts") || "[]"
+      );
+    } catch {
+      setError("Data akun tidak dapat dibaca.");
+      return;
+    }
 
+    if (!Array.isArray(accounts)) {
+      setError("Data akun tidak valid.");
+      return;
+    }
+
+    const account = accounts.find(
+      (item) =>
+        item.role === "mitra" &&
+        (
+          item.username?.toLowerCase() === username ||
+          item.email?.toLowerCase() === username
+        ) &&
+        item.password === password
+    );
+
+    if (!account) {
+      setError("Username/email atau password salah.");
+      return;
+    }
+
+    localStorage.setItem(
+      "surplus_session",
+      JSON.stringify({
+        username: account.username,
+        nama: account.namaPemilik,
+        namaUsaha: account.namaUsaha,
+        role: "mitra",
+      })
+    );
+
+    navigate("/mitra");
+  };
 
   return (
     <div className="login-page">
-      <form className="login-card" onSubmit={handleSubmit}>
-        {/* Logo dan judul */}
+      <div className="login-card">
         <div className="login-header">
           <div className="login-logo">
-            <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+            <svg viewBox="0 0 48 48" fill="none">
               <path
-                d="M22 6c-3 3-3 6 0 9s3 6 0 9"
-                stroke="#fff"
-                strokeWidth="3"
+                d="M17 7 C9 12 27 14 18 20 M29 7 C21 12 39 14 30 20 M23 4 C15 9 33 11 24 17"
+                stroke="white"
+                strokeWidth="2.5"
                 strokeLinecap="round"
               />
               <path
-                d="M32 4c-3 3-3 6 0 9s3 6 0 9"
-                stroke="#fff"
-                strokeWidth="3"
-                strokeLinecap="round"
+                d="M7 31 C9 22 16 19 24 19 C32 19 39 22 41 31 Z"
+                fill="white"
               />
               <path
-                d="M42 6c-3 3-3 6 0 9s3 6 0 9"
-                stroke="#fff"
-                strokeWidth="3"
+                d="M5 34 H43 M12 38 H36"
+                stroke="white"
+                strokeWidth="2.5"
                 strokeLinecap="round"
-              />
-              <circle cx="32" cy="29" r="3" fill="#fff" />
-              <path d="M13 46a19 19 0 0 1 38 0Z" fill="#fff" />
-              <rect
-                x="8"
-                y="49"
-                width="48"
-                height="5"
-                rx="2.5"
-                fill="#fff"
               />
             </svg>
           </div>
 
           <h1 className="login-brand">Surplus</h1>
-          <h2 className="login-title">SILAKAN MASUK</h2>
-          <p className="login-subtitle">Login Admin/Mitra</p>
+          <p className="login-title">MASUK KE AKUN</p>
+          <p className="login-subtitle">
+            Masuk untuk melanjutkan ke Surplus
+          </p>
         </div>
 
-        {/* Form login */}
-        <div className="form-group">
-          <label htmlFor="username">Username</label>
-          <input
-            id="username"
-            name="username"
-            type="text"
-            placeholder="Masukan Username Anda"
-            value={form.username}
-            onChange={handleChange}
-            autoComplete="username"
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="password">Password</label>
-          <div className="password-wrap">
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="username">Username atau Email</label>
             <input
-              id="password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="Masukan Password Anda"
-              value={form.password}
+              id="username"
+              type="text"
+              name="username"
+              placeholder="Masukkan username atau email"
+              value={form.username}
               onChange={handleChange}
-              autoComplete="current-password"
-              required
+              autoComplete="username"
             />
-
-            <button
-              type="button"
-              className="toggle-eye"
-              onClick={() => setShowPassword(!showPassword)}
-              aria-label={
-                showPassword ? "Sembunyikan sandi" : "Tampilkan sandi"
-              }
-            >
-              <EyeIcon open={showPassword} />
-            </button>
           </div>
-        </div>
 
-        {error && <p className="form-error">{error}</p>}
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
 
-        <button type="submit" className="btn-login">Login</button>
+            <div className="password-wrap">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="Masukkan password"
+                value={form.password}
+                onChange={handleChange}
+                autoComplete="current-password"
+              />
 
-<p className="login-footer">
-  Belum punya akun? <Link to="/register">Daftar Sekarang</Link>
-</p>
-      </form>
+              <button
+                type="button"
+                className="toggle-eye"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={
+                  showPassword ? "Sembunyikan password" : "Tampilkan password"
+                }
+              >
+                {showPassword ? "◉" : "◎"}
+              </button>
+            </div>
+          </div>
+
+          {error && <p className="form-error">{error}</p>}
+
+          <button type="submit" className="btn-login">
+            Masuk
+          </button>
+        </form>
+
+        <p className="login-footer">
+          Belum punya akun Mitra?{" "}
+          <Link to="/register">Daftar Sekarang</Link>
+        </p>
+      </div>
     </div>
   );
 }

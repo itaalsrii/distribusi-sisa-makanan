@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "./Register.css";
@@ -38,6 +39,7 @@ function PasswordField({ id, label, value, onChange }) {
   return (
     <div className="form-group">
       <label htmlFor={id}>{label}</label>
+
       <div className="password-wrap">
         <input
           id={id}
@@ -46,8 +48,12 @@ function PasswordField({ id, label, value, onChange }) {
           placeholder="********"
           value={value}
           onChange={onChange}
+          autoComplete={
+            id === "password" ? "new-password" : "new-password"
+          }
           required
         />
+
         <button
           type="button"
           className="toggle-eye"
@@ -63,32 +69,58 @@ function PasswordField({ id, label, value, onChange }) {
 
 function Register() {
   const navigate = useNavigate();
-const [form, setForm] = useState({
-  namaUsaha: "",
-  namaPemilik: "",
-  username: "",
-  email: "",
-  noHp: "",
-  alamat: "",
-  password: "",
-  konfirmasi: "",
-});
+
+  const [form, setForm] = useState({
+    namaUsaha: "",
+    namaPemilik: "",
+    username: "",
+    email: "",
+    noHp: "",
+    alamat: "",
+    password: "",
+    konfirmasi: "",
+  });
+
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    if (error) setError("");
+    setForm((previous) => ({
+      ...previous,
+      [e.target.name]: e.target.value,
+    }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setError("");
 
-    const noHp = form.noHp.replace(/[\s-]/g, "");
-    if (!/^(\+62|62|0)8[1-9][0-9]{7,11}$/.test(noHp)) {
-      setError("Nomor HP/WhatsApp tidak valid. Contoh: 082345678910.");
+    const namaUsaha = form.namaUsaha.trim();
+    const namaPemilik = form.namaPemilik.trim();
+    const username = form.username.trim();
+    const email = form.email.trim().toLowerCase();
+
+    // Validasi kolom
+    if (
+      !namaUsaha ||
+      !namaPemilik ||
+      !username ||
+      !email ||
+      !form.noHp.trim() ||
+      !form.alamat.trim() ||
+      !form.password ||
+      !form.konfirmasi
+    ) {
+      setError("Semua kolom wajib diisi.");
       return;
     }
 
+    // Username admin tidak boleh digunakan Mitra
+    if (username.toLowerCase() === "admin") {
+      setError("Username tersebut tidak tersedia.");
+      return;
+    }
+
+    // Validasi password
     if (form.password.length < 8) {
       setError("Kata sandi minimal 8 karakter.");
       return;
@@ -99,17 +131,28 @@ const [form, setForm] = useState({
       return;
     }
 
-    const accounts = JSON.parse(
-      localStorage.getItem("surplus_accounts") || "[]"
-    );
+    // Ambil data akun yang sudah terdaftar
+    let accounts = [];
 
-    const username = form.username.trim();
-    const email = form.email.trim().toLowerCase();
+    try {
+      accounts = JSON.parse(
+        localStorage.getItem("surplus_accounts") || "[]"
+      );
+    } catch {
+      setError("Data akun bermasalah. Silakan muat ulang halaman.");
+      return;
+    }
 
+    if (!Array.isArray(accounts)) {
+      setError("Data akun tidak valid.");
+      return;
+    }
+
+    // Periksa username dan email yang sama
     const alreadyExists = accounts.some(
       (account) =>
-        account.username.toLowerCase() === username.toLowerCase() ||
-        account.email.toLowerCase() === email
+        account.username?.toLowerCase() === username.toLowerCase() ||
+        account.email?.toLowerCase() === email
     );
 
     if (alreadyExists) {
@@ -117,23 +160,35 @@ const [form, setForm] = useState({
       return;
     }
 
+    // Buat akun Mitra baru
     const newAccount = {
-      namaUsaha: form.namaUsaha.trim(),
-      namaPemilik: form.namaPemilik.trim(),
+      id: `mitra-${Date.now()}`,
+      namaUsaha,
+      namaPemilik,
       username,
       email,
-      noHp,
+      noHp: form.noHp.trim(),
       alamat: form.alamat.trim(),
       password: form.password,
+      role: "mitra",
     };
 
-    localStorage.setItem(
-      "surplus_accounts",
-      JSON.stringify([...accounts, newAccount])
+    // Simpan akun
+    try {
+      localStorage.setItem(
+        "surplus_accounts",
+        JSON.stringify([...accounts, newAccount])
+      );
+    } catch {
+      setError("Akun gagal disimpan. Periksa penyimpanan browser.");
+      return;
+    }
+
+    alert(
+      "Registrasi Mitra berhasil! Silakan login menggunakan username atau email dan kata sandi yang telah dibuat."
     );
 
-    setError("");
-    alert("Registrasi berhasil! Silakan login dengan akun Anda.");
+    // Kembali ke halaman Login
     navigate("/");
   };
 
@@ -166,12 +221,15 @@ const [form, setForm] = useState({
               <rect x="8" y="49" width="48" height="5" rx="2.5" fill="#fff" />
             </svg>
           </div>
+
           <h1 className="register-brand">Surplus</h1>
           <h2 className="register-title">SILAKAN REGISTRASI</h2>
         </div>
 
         <div className="form-group">
-          <label htmlFor="namaUsaha">Nama Toko / Restoran / Usaha</label>
+          <label htmlFor="namaUsaha">
+            Nama Toko / Restoran / Usaha
+          </label>
           <input
             id="namaUsaha"
             name="namaUsaha"
@@ -184,7 +242,9 @@ const [form, setForm] = useState({
         </div>
 
         <div className="form-group">
-          <label htmlFor="namaPemilik">Nama Pemilik / Penanggung Jawab</label>
+          <label htmlFor="namaPemilik">
+            Nama Pemilik / Penanggung Jawab
+          </label>
           <input
             id="namaPemilik"
             name="namaPemilik"
@@ -196,20 +256,19 @@ const [form, setForm] = useState({
           />
         </div>
 
-        
-<div className="form-group">
-  <label htmlFor="username">Username</label>
-  <input
-    id="username"
-    name="username"
-    type="text"
-    placeholder="Buat username Anda"
-    value={form.username}
-    onChange={handleChange}
-    required
-  />
-</div>
-
+        <div className="form-group">
+          <label htmlFor="username">Username</label>
+          <input
+            id="username"
+            name="username"
+            type="text"
+            placeholder="Buat username Anda"
+            value={form.username}
+            onChange={handleChange}
+            autoComplete="username"
+            required
+          />
+        </div>
 
         <div className="form-row">
           <div className="form-group">
@@ -221,9 +280,11 @@ const [form, setForm] = useState({
               placeholder="tepidanaunibos@gmail.com"
               value={form.email}
               onChange={handleChange}
+              autoComplete="email"
               required
             />
           </div>
+
           <div className="form-group">
             <label htmlFor="noHp">No. WhatsApp / HP</label>
             <input
@@ -258,6 +319,7 @@ const [form, setForm] = useState({
             value={form.password}
             onChange={handleChange}
           />
+
           <PasswordField
             id="konfirmasi"
             label="Konfirmasi Sandi"
@@ -272,10 +334,9 @@ const [form, setForm] = useState({
           Daftar Sebagai Mitra
         </button>
 
-        
-<p className="register-footer">
-  Sudah punya akun? <Link to="/">Masuk Sekarang</Link>
-</p>
+        <p className="register-footer">
+          Sudah punya akun? <Link to="/login">Masuk Sekarang</Link>
+        </p>
       </form>
     </div>
   );
