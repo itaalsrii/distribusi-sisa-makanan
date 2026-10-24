@@ -1,0 +1,426 @@
+
+* {
+  box-sizing: border-box;
+}
+
+.admin-dashboard {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #16171a;
+  color: #fff;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Navbar */
+.admin-navbar {
+  min-height: 64px;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  background: #29292c;
+  border-bottom: 1px solid #353539;
+}
+
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.admin-brand-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: #c53530;
+  overflow: hidden;
+}
+
+.admin-brand-icon svg {
+  width: 35px;
+  height: 35px;
+}
+
+.admin-brand > span {
+  color: #e52e2e;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.admin-nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.admin-nav-link {
+  padding: 6px 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #dedee0;
+  font-family: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.admin-nav-link:hover {
+  background: #3b3b3f;
+}
+
+.admin-nav-link.active {
+  background: #e52529;
+  color: #fff;
+}
+
+.admin-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 0 2px;
+  border: none;
+  background: transparent;
+  color: #eee;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.admin-profile svg {
+  width: 26px;
+  height: 26px;
+  color: #dedee0;
+}
+
+/* Konten utama */
+.admin-main {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px 20px 20px;
+  flex: 1;
+}
+
+/* Banner sambutan */
+.admin-welcome {
+  padding: 8px 15px 18px;
+  background: #29292c;
+  margin-bottom: 20px;
+}
+
+.admin-welcome-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 16px;
+}
+
+.admin-banner-logo {
+  width: 62px;
+  height: 62px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.admin-banner-logo svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.admin-welcome-heading h1 {
+  margin: 0;
+  font-size: 36px;
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.admin-welcome-heading p {
+  margin: 0;
+  color: #d0d0d2;
+  font-size: 17px;
+  line-height: 1.4;
+}
+
+/* Kartu statistik */
+.admin-stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 0 15px;
+}
+
+.admin-stat-card {
+  width: 30%;
+  min-height: 55px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 6px;
+  background: #77777a;
+}
+
+.stat-icon {
+  width: 28px;
+  flex-shrink: 0;
+  color: #080808;
+  font-size: 29px;
+  line-height: 1;
+  text-align: center;
+}
+
+.admin-stat-card p {
+  margin: 0 0 3px;
+  color: #ededee;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.admin-stat-card h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* Grafik dan aktivitas */
+.admin-dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(300px, 0.95fr);
+  gap: 24px;
+}
+
+.admin-panel {
+  min-width: 0;
+  background: #29292c;
+}
+
+.admin-panel h2 {
+  margin: 0;
+  padding: 0 9px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+/* Grafik */
+.chart-panel {
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-area {
+  flex: 1;
+  min-height: 130px;
+  padding: 15px 12%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.chart-bars {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+}
+
+.chart-bar {
+  min-width: 0;
+  flex: 1;
+  background: #77777a;
+  transition: background 0.2s ease;
+}
+
+.chart-bar:hover {
+  background: #c53530;
+}
+
+/* Tabel aktivitas */
+.activity-panel {
+  padding: 6px 7px 12px;
+}
+
+.activity-panel h2 {
+  padding: 0 5px 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.activity-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.activity-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #e3e3e5;
+  font-size: 12px;
+  text-align: left;
+}
+
+.activity-table thead {
+  background: #77777a;
+}
+
+.activity-table th {
+  padding: 5px 4px;
+  font-weight: 500;
+  vertical-align: top;
+}
+
+.activity-table td {
+  padding: 7px 4px;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.activity-table th:first-child,
+.activity-table td:first-child {
+  text-align: center;
+}
+
+/* Halaman menu lainnya */
+.admin-placeholder {
+  min-height: 300px;
+  padding: 24px;
+  background: #29292c;
+}
+
+.admin-placeholder h1 {
+  margin-top: 0;
+  font-size: 28px;
+}
+
+.admin-placeholder p {
+  color: #d0d0d2;
+  font-size: 14px;
+}
+
+/* Footer */
+.admin-footer {
+  padding: 20px 12px;
+  background: #29292c;
+  color: #a8a8ab;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+  .admin-navbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-nav-menu {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .admin-main {
+    padding: 18px 14px;
+  }
+
+  .admin-welcome-heading h1 {
+    font-size: 29px;
+  }
+
+  .admin-welcome-heading p {
+    font-size: 14px;
+  }
+
+  .admin-stats {
+    padding: 0;
+    gap: 10px;
+  }
+
+  .admin-stat-card {
+    width: auto;
+    flex: 1;
+    padding: 8px;
+  }
+
+  .admin-stat-card p {
+    white-space: normal;
+  }
+
+  .admin-dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* HP */
+@media (max-width: 520px) {
+  .admin-navbar {
+    padding: 10px 12px;
+  }
+
+  .admin-nav-menu {
+    justify-content: flex-start;
+    gap: 6px;
+  }
+
+  .admin-nav-link {
+    font-size: 11px;
+  }
+
+  .admin-main {
+    padding: 14px 10px;
+  }
+
+  .admin-welcome {
+    padding: 12px;
+  }
+
+  .admin-welcome-heading {
+    align-items: flex-start;
+  }
+
+  .admin-banner-logo {
+    width: 44px;
+    height: 44px;
+  }
+
+  .admin-welcome-heading h1 {
+    font-size: 22px;
+  }
+
+  .admin-welcome-heading p {
+    font-size: 12px;
+  }
+
+  .admin-stats {
+    flex-direction: column;
+  }
+
+  .admin-stat-card {
+    width: 100%;
+  }
+
+  .chart-area {
+    padding-right: 8%;
+    padding-left: 8%;
+  }
+
+  .activity-table {
+    min-width: 400px;
+  }
+}
