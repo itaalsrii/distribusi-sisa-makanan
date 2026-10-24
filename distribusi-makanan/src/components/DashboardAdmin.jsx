@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import DataPengguna from "./DataPenggunaAdmin";
 import "./AdminDashboard.css";
 
 function LogoSurplus() {
@@ -50,10 +51,10 @@ function AdminDashboard() {
   const [menuAktif, setMenuAktif] = useState("Beranda");
 
   const menu = [
-    "Beranda",
-    "Data Pengguna",
-    "Data Makanan",
-    "Laporan",
+    { label: "Beranda", to: "/admin" },
+    { label: "Data Pengguna", to: "/admin/pengguna" },
+    { label: "Data Makanan", to: "/admin/makanan" },
+    { label: "Laporan", to: "/admin/laporan" },
   ];
 
   const aktivitas = [
@@ -75,7 +76,6 @@ function AdminDashboard() {
 
   return (
     <div className="admin-dashboard">
-      {/* Navbar */}
       <header className="admin-navbar">
         <Link to="/admin" className="admin-brand">
           <div className="admin-brand-icon">
@@ -86,16 +86,16 @@ function AdminDashboard() {
 
         <nav className="admin-nav-menu">
           {menu.map((item) => (
-            <button
-              key={item}
-              type="button"
+            <Link
+              key={item.label}
+              to={item.to}
               className={`admin-nav-link ${
-                menuAktif === item ? "active" : ""
+                menuAktif === item.label ? "active" : ""
               }`}
-              onClick={() => setMenuAktif(item)}
+              onClick={() => setMenuAktif(item.label)}
             >
-              {item}
-            </button>
+              {item.label}
+            </Link>
           ))}
 
           <button
@@ -103,7 +103,7 @@ function AdminDashboard() {
             className="admin-profile"
             onClick={() => alert("Profil Admin")}
           >
-            <svg viewBox="0 0 24 24" fill="currentColor">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4a3.2 3.2 0 1 1 0 6.4A3.2 3.2 0 0 1 12 6Zm0 13a7 7 0 0 1-5.5-2.7c.1-2.1 3.7-3.3 5.5-3.3s5.4 1.2 5.5 3.3A7 7 0 0 1 12 19Z" />
             </svg>
             <span>Admin</span>
@@ -111,11 +111,11 @@ function AdminDashboard() {
         </nav>
       </header>
 
-      {/* Konten */}
       <main className="admin-main">
-        {menuAktif === "Beranda" ? (
+        {menuAktif === "Data Pengguna" ? (
+          <DataPengguna />
+        ) : menuAktif === "Beranda" ? (
           <>
-            {/* Banner sambutan */}
             <section className="admin-welcome">
               <div className="admin-welcome-heading">
                 <div className="admin-banner-logo">
@@ -130,7 +130,6 @@ function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Statistik */}
               <div className="admin-stats">
                 <div className="admin-stat-card">
                   <div className="stat-icon food-stat-icon">♨</div>
@@ -158,7 +157,6 @@ function AdminDashboard() {
               </div>
             </section>
 
-            {/* Grafik dan aktivitas */}
             <section className="admin-dashboard-grid">
               <div className="admin-panel chart-panel">
                 <h2>Grafik Distribusi Makanan</h2>
@@ -213,15 +211,11 @@ function AdminDashboard() {
         ) : (
           <section className="admin-placeholder">
             <h1>{menuAktif}</h1>
-            <p>
-              Halaman {menuAktif.toLowerCase()} dapat dikembangkan
-              pada komponen terpisah.
-            </p>
+            <p>Halaman ini belum dibuat.</p>
           </section>
         )}
       </main>
 
-      {/* Footer */}
       <footer className="admin-footer">
         © 2026 Surplus - Platform Distribusi Makanan Berlebih.
       </footer>

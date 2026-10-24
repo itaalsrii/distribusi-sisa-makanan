@@ -160,19 +160,18 @@ function Register() {
       return;
     }
 
-    // Buat akun Mitra baru
-    const newAccount = {
-      id: `mitra-${Date.now()}`,
-      namaUsaha,
-      namaPemilik,
-      username,
-      email,
-      noHp: form.noHp.trim(),
-      alamat: form.alamat.trim(),
-      password: form.password,
-      role: "mitra",
-    };
-
+const newAccount = {
+  id: `mitra-${Date.now()}`,
+  namaUsaha: form.namaUsaha,
+  namaPemilik: form.namaPemilik,
+  username: form.username.trim(),
+  email: form.email.trim().toLowerCase(),
+  noHp: form.noHp,
+  alamat: form.alamat,
+  password: form.password,
+  role: "mitra",
+  status: "Aktif",
+};
     // Simpan akun
     try {
       localStorage.setItem(
