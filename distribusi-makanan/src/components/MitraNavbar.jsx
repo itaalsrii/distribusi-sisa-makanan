@@ -3,9 +3,9 @@ import { colors } from '../theme';
 
 const menus = [
   { key: 'home', label: 'Beranda' },
-  { key: 'makanan', label: 'Makanan Saya' },
-  { key: 'laporan', label: 'Laporan' },
-  { key: 'pengajuan', label: 'Pengajuan Penerima' }
+  { key: 'makanan', label: 'Katalog Makanan Saya' },
+  { key: 'pengajuan', label: 'Pengajuan Penerima' },
+  { key: 'laporan', label: 'Laporan' }
 ];
 
 export default function MitraNavbar({ activePage, setActivePage, namaMitra }) {

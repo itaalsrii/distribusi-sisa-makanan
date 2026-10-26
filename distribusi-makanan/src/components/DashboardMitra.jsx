@@ -5,6 +5,7 @@ import WelcomeHero from './WelcomeHero';
 import StatCard from './StatCard';
 import StatusMakanan from './StatusMakanan';
 import PanduanKelayakan from './PanduanKelayakan';
+import PengajuanPenerima from './PengajuanPenerima';
 import { colors } from '../theme';
 
 // baca data Mitra yang lagi login (disimpan oleh Login.jsx)
@@ -20,7 +21,7 @@ export default function DashboardMitra() {
   const [session] = useState(bacaSession);
   const [activePage, setActivePage] = useState('home');
 
-  // data sementara, nanti ditambah lewat form upload di menu Makanan Saya
+  // data sementara, nanti ditambah lewat form upload di menu Katalog Makanan Saya
   // foto: null = belum ada foto, nanti diisi Base64 dari upload mitra
   const [daftarMakanan] = useState([
     { id: 1, nama: 'Mie Ayam', porsi: 5, status: 'menunggu', foto: null },
@@ -33,6 +34,9 @@ export default function DashboardMitra() {
   }
 
   const namaMitra = session.namaUsaha || session.nama;
+
+  // halaman Pengajuan Penerima dibuat selebar layar
+  const selebarLayar = activePage === 'pengajuan';
 
   const stats = [
     { icon: 'package', label: 'Makanan Dibagikan', value: '24 Item', color: '#94a3b8' },
@@ -52,8 +56,8 @@ export default function DashboardMitra() {
 
   const mainStyle = {
     flex: 1,
-    padding: '28px 30px',
-    maxWidth: '1200px',
+    padding: selebarLayar ? '28px 0 0' : '28px 30px',
+    maxWidth: selebarLayar ? 'none' : '1200px',
     width: '100%',
     margin: '0 auto',
     boxSizing: 'border-box'
@@ -109,9 +113,9 @@ export default function DashboardMitra() {
             </div>
           </>
         )}
-        {activePage === 'makanan' && <p>Makanan Saya (isi menyusul)</p>}
+        {activePage === 'makanan' && <p>Katalog Makanan Saya (isi menyusul)</p>}
+        {activePage === 'pengajuan' && <PengajuanPenerima namaMitra={namaMitra} />}
         {activePage === 'laporan' && <p>Laporan (isi menyusul)</p>}
-        {activePage === 'pengajuan' && <p>Pengajuan Penerima (isi menyusul)</p>}
       </main>
 
       <footer style={footerStyle}>© 2026 Surplus – Platform Distribusi Makanan Berlebih.</footer>
