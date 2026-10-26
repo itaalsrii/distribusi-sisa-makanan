@@ -11,6 +11,7 @@ import Register from "./components/Register";
 import Penerima from "./components/Penerima";
 import DashboardAdmin from "./components/DashboardAdmin";
 import DataPenggunaAdmin from "./components/DataPenggunaAdmin";
+import DataMakananAdmin from "./components/DataMakananAdmin";
 import DashboardMitra from "./components/DashboardMitra";
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
 
         <Route path="/admin" element={<DashboardAdmin />} />
         <Route path="/admin/pengguna" element={<DataPenggunaAdmin />} />
+        <Route path="/admin/makanan" element={<DataMakananAdmin />} />
         <Route path="/mitra" element={<DashboardMitra />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />

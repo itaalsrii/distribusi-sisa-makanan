@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import DataPengguna from "./DataPenggunaAdmin";
+import DataMakanan from "./DataMakananAdmin";
 import "./AdminDashboard.css";
 
 function LogoSurplus() {
@@ -114,6 +115,8 @@ function AdminDashboard() {
       <main className="admin-main">
         {menuAktif === "Data Pengguna" ? (
           <DataPengguna />
+        ) : menuAktif === "Data Makanan" ? (
+          <DataMakanan />
         ) : menuAktif === "Beranda" ? (
           <>
             <section className="admin-welcome">
