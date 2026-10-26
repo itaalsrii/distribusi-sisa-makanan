@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import MitraNavbar from './MitraNavbar';
 import WelcomeHero from './WelcomeHero';
 import StatCard from './StatCard';
@@ -6,9 +7,18 @@ import StatusMakanan from './StatusMakanan';
 import PanduanKelayakan from './PanduanKelayakan';
 import { colors } from '../theme';
 
+// baca data Mitra yang lagi login (disimpan oleh Login.jsx)
+function bacaSession() {
+  try {
+    return JSON.parse(localStorage.getItem('surplus_session') || 'null');
+  } catch {
+    return null;
+  }
+}
+
 export default function DashboardMitra() {
+  const [session] = useState(bacaSession);
   const [activePage, setActivePage] = useState('home');
-  const namaMitra = 'Resto Batam';
 
   // data sementara, nanti ditambah lewat form upload di menu Makanan Saya
   // foto: null = belum ada foto, nanti diisi Base64 dari upload mitra
@@ -16,6 +26,13 @@ export default function DashboardMitra() {
     { id: 1, nama: 'Mie Ayam', porsi: 5, status: 'menunggu', foto: null },
     { id: 2, nama: 'Kentang Goreng', porsi: 10, status: 'disalurkan', foto: null }
   ]);
+
+  // belum login atau bukan Mitra -> balik ke halaman login
+  if (!session || session.role !== 'mitra') {
+    return <Navigate to="/login" replace />;
+  }
+
+  const namaMitra = session.namaUsaha || session.nama;
 
   const stats = [
     { icon: 'package', label: 'Makanan Dibagikan', value: '24 Item', color: '#94a3b8' },
