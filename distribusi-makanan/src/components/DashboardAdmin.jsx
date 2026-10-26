@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import "./AdminDashboard.css";
+import AdminProfile from "./AdminProfile";
 
 function LogoSurplus() {
   return (
@@ -93,17 +94,9 @@ function DashboardAdmin() {
               {item.label}
             </Link>
           ))}
+          
+          <AdminProfile />
 
-          <button
-            type="button"
-            className="admin-profile"
-            onClick={() => alert("Profil Admin")}
-          >
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4a3.2 3.2 0 1 1 0 6.4A3.2 3.2 0 0 1 12 6Zm0 13a7 7 0 0 1-5.5-2.7c.1-2.1 3.7-3.3 5.5-3.3s5.4 1.2 5.5 3.3A7 7 0 0 1 12 19Z" />
-            </svg>
-            <span>Admin</span>
-          </button>
         </nav>
       </header>
 

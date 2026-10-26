@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import "./LaporanAdmin.css";
+import AdminProfile from "./AdminProfile";
 
 const laporanAwal = [
   {
@@ -97,10 +98,8 @@ function LaporanAdmin() {
     ))}
   </nav>
 
-  <div className="laporan-profile">
-    <span className="laporan-avatar" aria-hidden="true">●</span>
-    <span>Admin</span>
-  </div>
+<AdminProfile />
+
 </header>
       <main className="laporan-main">
         <section className="laporan-heading">

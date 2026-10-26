@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import "./DataPenggunaAdmin.css";
+import AdminProfile from "./AdminProfile";
 
 function LogoSurplus() {
   return (
@@ -190,10 +191,8 @@ const [pengguna, setPengguna] = useState(() => {
             </Link>
           ))}
 
-          <div className="users-admin-profile">
-            <AdminIcon />
-            <span>Admin</span>
-          </div>
+<AdminProfile />
+
         </nav>
       </header>
 

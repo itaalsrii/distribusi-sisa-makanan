@@ -1,0 +1,80 @@
+
+.admin-profile-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-profile {
+  min-width: 60px;
+  padding: 5px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #FFFFFF;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.admin-profile:hover {
+  background: #38383C;
+}
+
+
+.admin-avatar {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #DADADD;
+}
+
+.admin-avatar svg {
+  width: 30px;
+  height: 30px;
+}
+
+
+.admin-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 1000;
+  width: 145px;
+  padding: 6px;
+  background: #29292C;
+  border: 1px solid #48484C;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 30%);
+}
+
+.admin-logout-button {
+  width: 100%;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: #FFFFFF;
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-logout-button:hover {
+  background: #E52529;
+}
+
+.admin-logout-button span {
+  font-size: 18px;
+}

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import "./DataMakananAdmin.css";
+import AdminProfile from "./AdminProfile";
 
 const dataAwal = [
   { id: 1, nama: "Ayam penyet", harga: "RP 5000", jumlah: 10, ketersediaan: "18 Porsi", alamat: "Batam Center" },
@@ -73,10 +74,8 @@ function DashboardMakanan() {
     ))}
   </nav>
 
-  <div className="makanan-profile">
-    <span className="makanan-avatar" aria-hidden="true">●</span>
-    <span>Admin</span>
-  </div>
+<AdminProfile />
+
 </header>
       <main className="makanan-main">
         <section className="makanan-titlebar">
