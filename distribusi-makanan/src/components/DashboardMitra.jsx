@@ -1,9 +1,103 @@
-function DashboardMitra() {
+import React, { useState } from 'react';
+import MitraNavbar from './MitraNavbar';
+import WelcomeHero from './WelcomeHero';
+import StatCard from './StatCard';
+import StatusMakanan from './StatusMakanan';
+import PanduanKelayakan from './PanduanKelayakan';
+import { colors } from '../theme';
+
+export default function DashboardMitra() {
+  const [activePage, setActivePage] = useState('home');
+  const namaMitra = 'Resto Batam';
+
+  // data sementara, nanti ditambah lewat form upload di menu Makanan Saya
+  // foto: null = belum ada foto, nanti diisi Base64 dari upload mitra
+  const [daftarMakanan] = useState([
+    { id: 1, nama: 'Mie Ayam', porsi: 5, status: 'menunggu', foto: null },
+    { id: 2, nama: 'Kentang Goreng', porsi: 10, status: 'disalurkan', foto: null }
+  ]);
+
+  const stats = [
+    { icon: 'package', label: 'Makanan Dibagikan', value: '24 Item', color: '#94a3b8' },
+    { icon: 'clock', label: 'Sedang Tersalurkan', value: '5 Item', color: '#f59e0b' },
+    { icon: 'checkCircle', label: 'Sudah Tersalurkan', value: '18 Item', color: '#22c55e' },
+    { icon: 'dollar', label: 'Total Pendapatan', value: 'Rp 50.000', color: '#22c55e' }
+  ];
+
+  const pageStyle = {
+    fontFamily: '"Inter", "Segoe UI", sans-serif',
+    backgroundColor: colors.bg,
+    color: colors.text,
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column'
+  };
+
+  const mainStyle = {
+    flex: 1,
+    padding: '28px 30px',
+    maxWidth: '1200px',
+    width: '100%',
+    margin: '0 auto',
+    boxSizing: 'border-box'
+  };
+
+  const statGrid = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: '16px',
+    marginBottom: '20px'
+  };
+
+  const panelGrid = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))',
+    gap: '16px',
+    alignItems: 'start'
+  };
+
+  const footerStyle = {
+    textAlign: 'center',
+    padding: '18px',
+    backgroundColor: colors.surface,
+    borderTop: `1px solid ${colors.border}`,
+    color: colors.muted,
+    fontSize: '0.9rem'
+  };
+
   return (
-    <div>
-      <h1>Dashboard Mitra</h1>
+    <div style={pageStyle}>
+      <MitraNavbar activePage={activePage} setActivePage={setActivePage} namaMitra={namaMitra} />
+
+      <main style={mainStyle}>
+        {activePage === 'home' && (
+          <>
+            <WelcomeHero namaMitra={namaMitra} onBagikan={() => setActivePage('makanan')} />
+
+            <div style={statGrid}>
+              {stats.map((item) => (
+                <StatCard
+                  key={item.label}
+                  icon={item.icon}
+                  label={item.label}
+                  value={item.value}
+                  color={item.color}
+                />
+              ))}
+            </div>
+
+            <div style={panelGrid}>
+              <StatusMakanan daftarMakanan={daftarMakanan} />
+              <PanduanKelayakan />
+            </div>
+          </>
+        )}
+        {activePage === 'makanan' && <p>Makanan Saya (isi menyusul)</p>}
+        {activePage === 'laporan' && <p>Laporan (isi menyusul)</p>}
+        {activePage === 'pengajuan' && <p>Pengajuan Penerima (isi menyusul)</p>}
+      </main>
+
+      <footer style={footerStyle}>© 2026 Surplus – Platform Distribusi Makanan Berlebih.</footer>
     </div>
   );
 }
-
-export default DashboardMitra;
