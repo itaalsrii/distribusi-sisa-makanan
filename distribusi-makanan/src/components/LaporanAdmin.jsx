@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import "./LaporanAdmin.css";
 
 const laporanAwal = [
@@ -68,27 +69,39 @@ function LaporanAdmin() {
     window.print();
   };
 
+  const location = useLocation();
+  const menu = [
+    { label: "Beranda", to: "/admin" },
+    { label: "Data Pengguna", to: "/admin/pengguna" },
+    { label: "Data Makanan", to: "/admin/makanan" },
+    { label: "Laporan", to: "/admin/laporan" },
+    ];
+
   return (
     <div className="laporan-admin">
-      <header className="laporan-navbar">
-        <a className="laporan-brand" href="/" aria-label="Surplus Beranda">
-          <span className="laporan-brand-logo" aria-hidden="true">♨</span>
-          <span>Surplus</span>
-        </a>
+<header className="laporan-navbar">
+  <Link className="laporan-brand" to="/admin">
+    <span className="laporan-brand-logo" aria-hidden="true">♨</span>
+    <span>Surplus</span>
+  </Link>
 
-        <nav className="laporan-nav" aria-label="Navigasi admin">
-          <a href="/dashboard-admin">Beranda</a>
-          <a href="/dashboard-admin#data-pengguna">Data Pengguna</a>
-          <a href="/data-makanan">Data Makanan</a>
-          <a className="active" href="/laporan-admin">Laporan</a>
-        </nav>
+  <nav className="laporan-nav" aria-label="Navigasi admin">
+    {menu.map((item) => (
+      <Link
+        key={item.to}
+        to={item.to}
+        className={location.pathname === item.to ? "active" : ""}
+      >
+        {item.label}
+      </Link>
+    ))}
+  </nav>
 
-        <div className="laporan-profile">
-          <span className="laporan-avatar" aria-hidden="true">●</span>
-          <span>Admin</span>
-        </div>
-      </header>
-
+  <div className="laporan-profile">
+    <span className="laporan-avatar" aria-hidden="true">●</span>
+    <span>Admin</span>
+  </div>
+</header>
       <main className="laporan-main">
         <section className="laporan-heading">
           <div className="laporan-heading-icon" aria-hidden="true">

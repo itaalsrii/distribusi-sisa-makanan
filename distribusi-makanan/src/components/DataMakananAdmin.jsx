@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import "./DataMakananAdmin.css";
 
 const dataAwal = [
@@ -42,26 +43,41 @@ function DashboardMakanan() {
       : data
     ));
   };
+  const location = useLocation();
+  const menu = [
+    { label: "Beranda", to: "/admin" },
+    { label: "Data Pengguna", to: "/admin/pengguna" },
+    { label: "Data Makanan", to: "/admin/makanan" },
+    { label: "Laporan", to: "/admin/laporan" },
+    ];
 
   return (
     <div className="makanan-dashboard">
-      <header className="makanan-navbar">
-        <a className="makanan-brand" href="/" aria-label="Surplus Beranda">
-          <span className="makanan-brand-logo" aria-hidden="true">♨</span>
-          <span>Surplus</span>
-        </a>
-        <nav className="makanan-nav" aria-label="Navigasi admin">
-          <a href="/dashboard-admin">Beranda</a>
-          <a href="/dashboard-admin#data-pengguna">Data Pengguna</a>
-          <a className="active" href="/data-makanan">Data Makanan</a>
-          <a href="/dashboard-admin#laporan">Laporan</a>
-        </nav>
-        <div className="makanan-profile">
-          <span className="makanan-avatar" aria-hidden="true">●</span>
-          <span>Admin</span>
-        </div>
-      </header>
+<header className="makanan-navbar">
+  <Link className="makanan-brand" to="/admin">
+    <span className="makanan-brand-logo" aria-hidden="true">♨</span>
+    <span>Surplus</span>
+  </Link>
 
+  <nav className="makanan-nav" aria-label="Navigasi admin">
+    {menu.map((item) => (
+      <Link
+        key={item.to}
+        to={item.to}
+        className={`makanan-nav-link ${
+          location.pathname === item.to ? "active" : ""
+        }`}
+      >
+        {item.label}
+      </Link>
+    ))}
+  </nav>
+
+  <div className="makanan-profile">
+    <span className="makanan-avatar" aria-hidden="true">●</span>
+    <span>Admin</span>
+  </div>
+</header>
       <main className="makanan-main">
         <section className="makanan-titlebar">
           <div className="makanan-title-icon" aria-hidden="true">▰</div>

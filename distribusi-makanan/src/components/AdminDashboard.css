@@ -1,18 +1,15 @@
-
-* {
-  box-sizing: border-box;
-}
+/* Dashboard Admin - tema Surplus */
+* { box-sizing: border-box; }
 
 .admin-dashboard {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #16171a;
-  color: #fff;
+  background: #16171A;
+  color: #F5F5F5;
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Navbar */
 .admin-navbar {
   min-height: 64px;
   padding: 10px 20px;
@@ -20,8 +17,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  background: #29292c;
-  border-bottom: 1px solid #353539;
+  background: #29292C;
+  border-bottom: 1px solid #48484C;
 }
 
 .admin-brand {
@@ -39,17 +36,14 @@
   align-items: center;
   justify-content: center;
   border-radius: 9px;
-  background: #c53530;
+  background: #E52529;
   overflow: hidden;
 }
 
-.admin-brand-icon svg {
-  width: 35px;
-  height: 35px;
-}
+.admin-brand-icon svg { width: 35px; height: 35px; }
 
 .admin-brand > span {
-  color: #e52e2e;
+  color: #E52529;
   font-size: 18px;
   font-weight: 700;
 }
@@ -57,28 +51,27 @@
 .admin-nav-menu {
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 14px;
 }
 
 .admin-nav-link {
-  padding: 6px 8px;
-  border: none;
+  padding: 8px 12px;
+  border: 0;
   border-radius: 6px;
   background: transparent;
-  color: #dedee0;
+  color: #E1E1E3;
   font-family: inherit;
   font-size: 13px;
+  text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
 }
 
-.admin-nav-link:hover {
-  background: #3b3b3f;
-}
+.admin-nav-link:hover { background: #3A3A3D; }
 
 .admin-nav-link.active {
-  background: #e52529;
-  color: #fff;
+  background: #E52529;
+  color: #FFF;
 }
 
 .admin-profile {
@@ -88,21 +81,19 @@
   justify-content: center;
   gap: 2px;
   padding: 0 2px;
-  border: none;
+  border: 0;
   background: transparent;
-  color: #eee;
+  color: #F5F5F5;
   font-family: inherit;
   font-size: 11px;
-  cursor: pointer;
 }
 
 .admin-profile svg {
   width: 26px;
   height: 26px;
-  color: #dedee0;
+  color: #DADADD;
 }
 
-/* Konten utama */
 .admin-main {
   width: 100%;
   max-width: 1440px;
@@ -111,18 +102,19 @@
   flex: 1;
 }
 
-/* Banner sambutan */
 .admin-welcome {
-  padding: 8px 15px 18px;
-  background: #29292c;
+  padding: 16px;
   margin-bottom: 20px;
+  background: #29292C;
+  border: 1px solid #38383C;
+  border-radius: 8px;
 }
 
 .admin-welcome-heading {
   display: flex;
   align-items: center;
-  gap: 9px;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 18px;
 }
 
 .admin-banner-logo {
@@ -141,90 +133,90 @@
 
 .admin-welcome-heading h1 {
   margin: 0;
-  font-size: 36px;
-  line-height: 1.15;
+  font-size: 28px;
+  line-height: 1.2;
   font-weight: 700;
 }
 
 .admin-welcome-heading p {
-  margin: 0;
-  color: #d0d0d2;
-  font-size: 17px;
-  line-height: 1.4;
+  margin: 5px 0 0;
+  color: #B8B8BC;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
-/* Kartu statistik */
 .admin-stats {
   display: flex;
   justify-content: space-between;
-  gap: 18px;
-  padding: 0 15px;
+  gap: 16px;
+  padding: 0 4px;
 }
 
 .admin-stat-card {
-  width: 30%;
-  min-height: 55px;
-  padding: 8px 10px;
+  width: 33.333%;
+  min-height: 76px;
+  padding: 14px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  border-radius: 6px;
-  background: #77777a;
+  gap: 12px;
+  border: 1px solid #48484C;
+  border-radius: 8px;
+  background: #353539;
 }
 
 .stat-icon {
-  width: 28px;
+  width: 32px;
   flex-shrink: 0;
-  color: #080808;
-  font-size: 29px;
+  color: #E52529;
+  font-size: 28px;
   line-height: 1;
   text-align: center;
 }
 
 .admin-stat-card p {
-  margin: 0 0 3px;
-  color: #ededee;
+  margin: 0 0 5px;
+  color: #C7C7CA;
   font-size: 12px;
-  white-space: nowrap;
 }
 
 .admin-stat-card h2 {
   margin: 0;
-  color: #fff;
-  font-size: 18px;
+  color: #FFF;
+  font-size: 20px;
   font-weight: 700;
 }
 
-/* Grafik dan aktivitas */
 .admin-dashboard-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(300px, 0.95fr);
-  gap: 24px;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 20px;
 }
 
 .admin-panel {
   min-width: 0;
-  background: #29292c;
+  padding: 14px;
+  background: #29292C;
+  border: 1px solid #38383C;
+  border-radius: 8px;
 }
 
 .admin-panel h2 {
-  margin: 0;
-  padding: 0 9px;
-  font-size: 17px;
+  margin: 0 0 12px;
+  padding: 0;
+  font-size: 16px;
   font-weight: 700;
 }
 
-/* Grafik */
 .chart-panel {
-  min-height: 160px;
+  min-height: 200px;
   display: flex;
   flex-direction: column;
 }
 
 .chart-area {
   flex: 1;
-  min-height: 130px;
-  padding: 15px 12%;
+  min-height: 150px;
+  padding: 15px 8%;
   display: flex;
   align-items: flex-end;
 }
@@ -235,30 +227,21 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 2px;
+  gap: 5px;
 }
 
 .chart-bar {
   min-width: 0;
   flex: 1;
-  background: #77777a;
-  transition: background 0.2s ease;
+  border-radius: 4px 4px 0 0;
+  background: #77777D;
+  transition: background .2s ease;
 }
 
-.chart-bar:hover {
-  background: #c53530;
-}
+.chart-bar:hover { background: #E52529; }
 
-/* Tabel aktivitas */
-.activity-panel {
-  padding: 6px 7px 12px;
-}
-
-.activity-panel h2 {
-  padding: 0 5px 8px;
-  font-size: 12px;
-  font-weight: 600;
-}
+.activity-panel { padding: 14px; }
+.activity-panel h2 { font-size: 16px; }
 
 .activity-table-wrapper {
   width: 100%;
@@ -268,59 +251,57 @@
 .activity-table {
   width: 100%;
   border-collapse: collapse;
-  color: #e3e3e5;
+  color: #E1E1E3;
   font-size: 12px;
   text-align: left;
 }
 
-.activity-table thead {
-  background: #77777a;
+.activity-table thead { background: #3A3A3F; }
+
+.activity-table th,
+.activity-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #48484C;
+  vertical-align: top;
 }
 
 .activity-table th {
-  padding: 5px 4px;
-  font-weight: 500;
-  vertical-align: top;
+  color: #FFF;
+  font-weight: 600;
 }
 
-.activity-table td {
-  padding: 7px 4px;
-  vertical-align: top;
-  overflow-wrap: anywhere;
-}
+.activity-table td { overflow-wrap: anywhere; }
 
 .activity-table th:first-child,
-.activity-table td:first-child {
-  text-align: center;
-}
+.activity-table td:first-child { text-align: center; }
 
-/* Halaman menu lainnya */
 .admin-placeholder {
   min-height: 300px;
   padding: 24px;
-  background: #29292c;
+  background: #29292C;
+  border: 1px solid #38383C;
+  border-radius: 8px;
 }
 
 .admin-placeholder h1 {
   margin-top: 0;
-  font-size: 28px;
+  font-size: 26px;
 }
 
 .admin-placeholder p {
-  color: #d0d0d2;
+  color: #B8B8BC;
   font-size: 14px;
 }
 
-/* Footer */
 .admin-footer {
-  padding: 20px 12px;
-  background: #29292c;
-  color: #a8a8ab;
+  padding: 18px 12px;
+  background: #29292C;
+  border-top: 1px solid #38383C;
+  color: #B8B8BC;
   font-size: 12px;
   text-align: center;
 }
 
-/* Tablet */
 @media (max-width: 900px) {
   .admin-navbar {
     align-items: flex-start;
@@ -329,22 +310,14 @@
 
   .admin-nav-menu {
     width: 100%;
-    justify-content: space-between;
-    gap: 8px;
+    justify-content: flex-start;
+    gap: 6px;
     flex-wrap: wrap;
   }
 
-  .admin-main {
-    padding: 18px 14px;
-  }
+  .admin-main { padding: 18px 14px; }
 
-  .admin-welcome-heading h1 {
-    font-size: 29px;
-  }
-
-  .admin-welcome-heading p {
-    font-size: 14px;
-  }
+  .admin-welcome-heading h1 { font-size: 25px; }
 
   .admin-stats {
     padding: 0;
@@ -354,11 +327,7 @@
   .admin-stat-card {
     width: auto;
     flex: 1;
-    padding: 8px;
-  }
-
-  .admin-stat-card p {
-    white-space: normal;
+    padding: 10px;
   }
 
   .admin-dashboard-grid {
@@ -367,60 +336,36 @@
   }
 }
 
-/* HP */
 @media (max-width: 520px) {
-  .admin-navbar {
-    padding: 10px 12px;
-  }
-
-  .admin-nav-menu {
-    justify-content: flex-start;
-    gap: 6px;
-  }
+  .admin-navbar { padding: 10px 12px; }
 
   .admin-nav-link {
-    font-size: 11px;
+    font-size: 12px;
+    padding: 7px 9px;
   }
 
-  .admin-main {
-    padding: 14px 10px;
-  }
+  .admin-main { padding: 14px 10px; }
 
-  .admin-welcome {
-    padding: 12px;
-  }
+  .admin-welcome { padding: 12px; }
 
-  .admin-welcome-heading {
-    align-items: flex-start;
-  }
+  .admin-welcome-heading { align-items: flex-start; }
 
   .admin-banner-logo {
     width: 44px;
     height: 44px;
   }
 
-  .admin-welcome-heading h1 {
-    font-size: 22px;
-  }
+  .admin-welcome-heading h1 { font-size: 21px; }
+  .admin-welcome-heading p { font-size: 12px; }
 
-  .admin-welcome-heading p {
-    font-size: 12px;
-  }
+  .admin-stats { flex-direction: column; }
 
-  .admin-stats {
-    flex-direction: column;
-  }
-
-  .admin-stat-card {
-    width: 100%;
-  }
+  .admin-stat-card { width: 100%; }
 
   .chart-area {
-    padding-right: 8%;
-    padding-left: 8%;
+    padding-right: 5%;
+    padding-left: 5%;
   }
 
-  .activity-table {
-    min-width: 400px;
-  }
+  .activity-table { min-width: 400px; }
 }

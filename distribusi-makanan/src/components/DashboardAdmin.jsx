@@ -1,8 +1,4 @@
-
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import DataPengguna from "./DataPenggunaAdmin";
-import DataMakanan from "./DataMakananAdmin";
+import { Link, useLocation } from "react-router-dom";
 import "./AdminDashboard.css";
 
 function LogoSurplus() {
@@ -48,8 +44,8 @@ function LogoBanner() {
   );
 }
 
-function AdminDashboard() {
-  const [menuAktif, setMenuAktif] = useState("Beranda");
+function DashboardAdmin() {
+  const location = useLocation();
 
   const menu = [
     { label: "Beranda", to: "/admin" },
@@ -88,12 +84,11 @@ function AdminDashboard() {
         <nav className="admin-nav-menu">
           {menu.map((item) => (
             <Link
-              key={item.label}
+              key={item.to}
               to={item.to}
               className={`admin-nav-link ${
-                menuAktif === item.label ? "active" : ""
+                location.pathname === item.to ? "active" : ""
               }`}
-              onClick={() => setMenuAktif(item.label)}
             >
               {item.label}
             </Link>
@@ -113,110 +108,91 @@ function AdminDashboard() {
       </header>
 
       <main className="admin-main">
-        {menuAktif === "Data Pengguna" ? (
-          <DataPengguna />
-        ) : menuAktif === "Data Makanan" ? (
-          <DataMakanan />
-        ) : menuAktif === "Beranda" ? (
-          <>
-            <section className="admin-welcome">
-              <div className="admin-welcome-heading">
-                <div className="admin-banner-logo">
-                  <LogoBanner />
-                </div>
+        <section className="admin-welcome">
+          <div className="admin-welcome-heading">
+            <div className="admin-banner-logo">
+              <LogoBanner />
+            </div>
+            <div>
+              <h1>Selamat Datang, Admin!!</h1>
+              <p>
+                Pantau dan kelola distribusi makanan berlebih dengan mudah.
+              </p>
+            </div>
+          </div>
 
-                <div>
-                  <h1>Selamat Datang, Admin!!</h1>
-                  <p>
-                    Pantau dan kelola distribusi makanan berlebih dengan mudah.
-                  </p>
-                </div>
+          <div className="admin-stats">
+            <div className="admin-stat-card">
+              <div className="stat-icon food-stat-icon">♨</div>
+              <div>
+                <p>Total Makanan Surplus</p>
+                <h2>300</h2>
               </div>
+            </div>
 
-              <div className="admin-stats">
-                <div className="admin-stat-card">
-                  <div className="stat-icon food-stat-icon">♨</div>
-                  <div>
-                    <p>Total Makanan Surplus</p>
-                    <h2>300</h2>
-                  </div>
-                </div>
-
-                <div className="admin-stat-card">
-                  <div className="stat-icon partner-stat-icon">♧</div>
-                  <div>
-                    <p>Total Mitra</p>
-                    <h2>15</h2>
-                  </div>
-                </div>
-
-                <div className="admin-stat-card">
-                  <div className="stat-icon receiver-stat-icon">♧</div>
-                  <div>
-                    <p>Total Penerima Manfaat</p>
-                    <h2>150</h2>
-                  </div>
-                </div>
+            <div className="admin-stat-card">
+              <div className="stat-icon partner-stat-icon">♧</div>
+              <div>
+                <p>Total Mitra</p>
+                <h2>15</h2>
               </div>
-            </section>
+            </div>
 
-            <section className="admin-dashboard-grid">
-              <div className="admin-panel chart-panel">
-                <h2>Grafik Distribusi Makanan</h2>
-
-                <div className="chart-area">
-                  <div className="chart-bars">
-                    {[40, 55, 70, 82, 69, 54, 40].map(
-                      (tinggi, index) => (
-                        <div
-                          key={index}
-                          className="chart-bar"
-                          style={{ height: `${tinggi}%` }}
-                          title={`Periode ${index + 1}`}
-                        />
-                      )
-                    )}
-                  </div>
-                </div>
+            <div className="admin-stat-card">
+              <div className="stat-icon receiver-stat-icon">♧</div>
+              <div>
+                <p>Total Penerima Manfaat</p>
+                <h2>150</h2>
               </div>
+            </div>
+          </div>
+        </section>
 
-              <div className="admin-panel activity-panel">
-                <h2>Aktivitas Terbaru</h2>
-
-                <div className="activity-table-wrapper">
-                  <table className="activity-table">
-                    <thead>
-                      <tr>
-                        <th>No</th>
-                        <th>Mitra</th>
-                        <th>Penerima</th>
-                        <th>Jenis Makanan</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                      {aktivitas.map((item) => (
-                        <tr key={item.no}>
-                          <td>{item.no}</td>
-                          <td>{item.mitra}</td>
-                          <td>{item.penerima}</td>
-                          <td>{item.makanan}</td>
-                          <td>{item.status}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+        <section className="admin-dashboard-grid">
+          <div className="admin-panel chart-panel">
+            <h2>Grafik Distribusi Makanan</h2>
+            <div className="chart-area">
+              <div className="chart-bars">
+                {[40, 55, 70, 82, 69, 54, 40].map((tinggi, index) => (
+                  <div
+                    key={index}
+                    className="chart-bar"
+                    style={{ height: `${tinggi}%` }}
+                    title={`Periode ${index + 1}`}
+                  />
+                ))}
               </div>
-            </section>
-          </>
-        ) : (
-          <section className="admin-placeholder">
-            <h1>{menuAktif}</h1>
-            <p>Halaman ini belum dibuat.</p>
-          </section>
-        )}
+            </div>
+          </div>
+
+          <div className="admin-panel activity-panel">
+            <h2>Aktivitas Terbaru</h2>
+            <div className="activity-table-wrapper">
+              <table className="activity-table">
+                <thead>
+                  <tr>
+                    <th>No</th>
+                    <th>Mitra</th>
+                    <th>Penerima</th>
+                    <th>Jenis Makanan</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {aktivitas.map((item) => (
+                    <tr key={item.no}>
+                      <td>{item.no}</td>
+                      <td>{item.mitra}</td>
+                      <td>{item.penerima}</td>
+                      <td>{item.makanan}</td>
+                      <td>{item.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="admin-footer">
@@ -226,4 +202,4 @@ function AdminDashboard() {
   );
 }
 
-export default AdminDashboard;
+export default DashboardAdmin;

@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import "./DataPenggunaAdmin.css";
 
 function LogoSurplus() {
@@ -97,7 +96,6 @@ function DeleteIcon() {
 }
 
 function DataPengguna() {
-  const [menuAktif, setMenuAktif] = useState("Data Pengguna");
   const [search, setSearch] = useState("");
 const [pengguna, setPengguna] = useState(() => {
   try {
@@ -122,6 +120,7 @@ const [pengguna, setPengguna] = useState(() => {
   const [formEdit, setFormEdit] = useState({});
   const [pesan, setPesan] = useState("");
 
+  const location = useLocation();
   const menu = [
     { label: "Beranda", to: "/admin" },
     { label: "Data Pengguna", to: "/admin/pengguna" },
@@ -166,6 +165,7 @@ const [pengguna, setPengguna] = useState(() => {
     );
     setPesan("Data pengguna berhasil dihapus.");
   };
+  
 
   return (
     <div className="users-page">
@@ -183,9 +183,8 @@ const [pengguna, setPengguna] = useState(() => {
               key={item.label}
               to={item.to}
               className={`users-nav-link ${
-                menuAktif === item.label ? "active" : ""
+                location.pathname === item.to ? "active" : ""
               }`}
-              onClick={() => setMenuAktif(item.label)}
             >
               {item.label}
             </Link>

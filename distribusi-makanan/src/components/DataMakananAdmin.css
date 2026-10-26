@@ -1,100 +1,36 @@
-* { box-sizing: border-box; }
-.makanan-dashboard {
-  min-height: 100vh; display: flex; flex-direction: column;
-  background: #171719; color: #f4f4f4; font-family: Arial, Helvetica, sans-serif;
-}
-.makanan-navbar {
-  min-height: 62px; padding: 10px 20px; display: flex; align-items: center;
-  gap: 20px; background: #29292c;
-}
-.makanan-brand {
-  display: inline-flex; align-items: center; gap: 8px; color: #ff292d;
-  text-decoration: none; font-size: 17px; font-weight: 700; white-space: nowrap;
-}
-.makanan-brand-logo {
-  width: 33px; height: 33px; display: grid; place-items: center;
-  border-radius: 8px; color: white; background: #f1282d; font-size: 22px;
-}
-.makanan-nav {
-  display: flex; align-items: center; justify-content: flex-end;
-  gap: 13px; margin-left: auto;
-}
-.makanan-nav a {
-  padding: 5px 10px; color: #e1e1e1; text-decoration: none;
-  font-size: 11px; border-radius: 5px;
-}
-.makanan-nav a:hover, .makanan-nav a.active { color: white; background: #f1282d; }
-.makanan-profile {
-  min-width: 44px; display: flex; flex-direction: column;
-  align-items: center; gap: 1px; color: #e7e7e7; font-size: 10px;
-}
-.makanan-avatar {
-  width: 19px; height: 19px; display: grid; place-items: center;
-  border: 2px solid #d7d7d7; border-radius: 50%; color: #d7d7d7; font-size: 11px;
-}
-.makanan-main { flex: 1; padding: 10px 20px 18px; }
-.makanan-titlebar {
-  min-height: 51px; display: flex; align-items: center; gap: 10px;
-  margin: 0 -1px; padding: 8px 0; background: #29292c;
-}
-.makanan-title-icon {
-  width: 34px; height: 36px; display: grid; place-items: center;
-  margin-left: -3px; color: #242427; background: #f1282d;
-  border-radius: 5px; font-size: 22px;
-}
-.makanan-titlebar h1 { margin: 0 0 3px; font-size: 15px; line-height: 1.15; }
-.makanan-titlebar p { margin: 0; color: #999; font-size: 10px; }
-.makanan-toolbar { display: flex; justify-content: flex-end; padding: 11px 0 10px; }
-.makanan-search {
-  width: 210px; height: 29px; display: flex; align-items: center;
-  overflow: hidden; border-radius: 5px 10px 10px 5px; background: #29292c;
-}
-.makanan-search-icon {
-  width: 29px; height: 29px; display: grid; place-items: center;
-  flex: 0 0 29px; color: #111; background: #d5d5d5; font-size: 25px; line-height: 1;
-}
-.makanan-search input {
-  width: 100%; min-width: 0; padding: 0 8px; border: 0; outline: 0;
-  color: #f3f3f3; background: transparent; font-family: inherit; font-size: 10px;
-}
-.makanan-search input::placeholder { color: #e0e0e0; }
-.makanan-table-panel { min-height: 186px; background: #29292c; }
-.makanan-table-scroll { width: 100%; overflow-x: auto; }
-.makanan-table {
-  width: 100%; min-width: 600px; border-collapse: collapse;
-  table-layout: fixed; text-align: center; font-size: 10px;
-}
-.makanan-table th {
-  height: 34px; padding: 7px 5px; border-right: 1px solid #aaa;
-  border-bottom: 1px solid #aaa; color: #e8e8e8; font-weight: 400;
-}
-.makanan-table td {
-  padding: 8px 5px; border-right: 1px solid #aaa;
-  color: #dedede; vertical-align: top; line-height: 1.9;
-}
-.makanan-table th:last-child, .makanan-table td:last-child { border-right: 0; }
-.makanan-table th:nth-child(1) { width: 17%; }
-.makanan-table th:nth-child(2) { width: 17%; }
-.makanan-table th:nth-child(3) { width: 16%; }
-.makanan-table th:nth-child(4) { width: 16%; }
-.makanan-table th:nth-child(5) { width: 16%; }
-.makanan-table th:nth-child(6) { width: 18%; }
-.makanan-actions { display: flex; justify-content: center; align-items: center; gap: 5px; }
-.makanan-action-btn {
-  width: 18px; height: 20px; display: inline-grid; place-items: center;
-  padding: 1px; border: 0; color: #ddd; background: transparent; cursor: pointer;
-}
-.makanan-action-btn:hover { color: #ff4246; }
-.makanan-action-btn svg {
-  width: 16px; height: 16px; fill: none; stroke: currentColor;
-  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
-}
-.makanan-empty { padding: 25px !important; color: #aaa !important; text-align: center; }
-.makanan-footer { padding: 18px 10px; background: #29292c; color: #aaa; text-align: center; font-size: 11px; }
-@media (max-width: 650px) {
-  .makanan-navbar { flex-wrap: wrap; gap: 10px; }
-  .makanan-nav { order: 3; width: 100%; justify-content: flex-start; flex-wrap: wrap; margin-left: 0; }
-  .makanan-profile { margin-left: auto; }
-  .makanan-main { padding: 10px 12px 18px; }
-  .makanan-search { width: min(210px, 100%); }
-}
+/* Data Makanan Admin - tema Surplus */
+* { box-sizing:border-box; }
+.makanan-dashboard { min-height:100vh; display:flex; flex-direction:column; background:#16171A; color:#F5F5F5; font-family:Arial,Helvetica,sans-serif; }
+.makanan-navbar { min-height:64px; padding:10px 20px; display:flex; align-items:center; gap:20px; background:#29292C; border-bottom:1px solid #48484C; }
+.makanan-brand { display:inline-flex; align-items:center; gap:8px; color:#E52529; text-decoration:none; font-size:18px; font-weight:700; white-space:nowrap; }
+.makanan-brand-logo { width:36px; height:36px; display:grid; place-items:center; border-radius:8px; color:#FFF; background:#E52529; font-size:22px; }
+.makanan-nav { display:flex; align-items:center; justify-content:flex-end; gap:14px; margin-left:auto; }
+.makanan-nav a { padding:8px 12px; color:#E1E1E3; text-decoration:none; font-size:13px; border-radius:6px; white-space:nowrap; }
+.makanan-nav a:hover,.makanan-nav a.active { color:#FFF; background:#E52529; }
+.makanan-profile { min-width:44px; display:flex; flex-direction:column; align-items:center; gap:2px; color:#F5F5F5; font-size:11px; }
+.makanan-avatar { width:22px; height:22px; display:grid; place-items:center; border:2px solid #DADADD; border-radius:50%; color:#DADADD; font-size:11px; }
+.makanan-main { flex:1; padding:18px 22px 24px; }
+.makanan-titlebar { min-height:70px; display:flex; align-items:center; gap:12px; padding:12px 14px; background:#29292C; border:1px solid #38383C; border-radius:7px; }
+.makanan-title-icon { width:36px; height:38px; display:grid; place-items:center; flex-shrink:0; color:#FFF; background:#E52529; border-radius:6px; font-size:22px; }
+.makanan-titlebar h1 { margin:0 0 4px; font-size:22px; line-height:1.2; }
+.makanan-titlebar p { margin:0; color:#B8B8BC; font-size:13px; }
+.makanan-toolbar { display:flex; justify-content:flex-end; padding:14px 0; }
+.makanan-search { width:220px; min-height:36px; display:flex; align-items:center; overflow:hidden; border:1px solid #48484C; border-radius:7px; background:#29292C; }
+.makanan-search:focus-within { border-color:#E52529; }
+.makanan-search-icon { width:34px; height:34px; display:grid; place-items:center; flex:0 0 34px; color:#DADADD; font-size:22px; }
+.makanan-search input { width:100%; min-width:0; padding:0 9px; border:0; outline:0; color:#FFF; background:transparent; font:13px Arial,Helvetica,sans-serif; }
+.makanan-search input::placeholder { color:#B8B8BC; }
+.makanan-table-panel { min-height:200px; overflow:hidden; background:#29292C; border:1px solid #48484C; border-radius:7px; }
+.makanan-table-scroll { width:100%; overflow-x:auto; }
+.makanan-table { width:100%; min-width:600px; border-collapse:collapse; table-layout:fixed; text-align:center; font-size:12px; color:#E1E1E3; }
+.makanan-table th { height:42px; padding:10px 8px; background:#3A3A3F; border-right:1px solid #48484C; border-bottom:1px solid #48484C; color:#FFF; font-weight:600; }
+.makanan-table td { padding:10px 8px; border-right:1px solid #48484C; border-bottom:1px solid #38383C; vertical-align:top; line-height:1.5; overflow-wrap:anywhere; }
+.makanan-table th:last-child,.makanan-table td:last-child { border-right:0; }
+.makanan-table th:nth-child(1){width:17%}.makanan-table th:nth-child(2){width:17%}.makanan-table th:nth-child(3){width:16%}.makanan-table th:nth-child(4){width:16%}.makanan-table th:nth-child(5){width:16%}.makanan-table th:nth-child(6){width:18%}
+.makanan-actions { display:flex; justify-content:center; align-items:center; gap:8px; }
+.makanan-action-btn { width:24px; height:24px; display:inline-grid; place-items:center; padding:2px; border:0; border-radius:4px; color:#E1E1E3; background:transparent; cursor:pointer; }
+.makanan-action-btn:hover { color:#E52529; background:#3A3A3D; }
+.makanan-action-btn svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.makanan-empty { padding:25px!important; color:#B8B8BC!important; text-align:center; }
+.makanan-footer { padding:18px 10px; background:#29292C; border-top:1px solid #38383C; color:#B8B8BC; text-align:center; font-size:12px; }
+@media(max-width:760px){ .makanan-navbar{flex-wrap:wrap;gap:10px;padding:12px}.makanan-nav{order:3;width:100%;justify-content:flex-start;flex-wrap:wrap;margin-left:0;gap:5px}.makanan-profile{margin-left:auto}.makanan-main{padding:12px}.makanan-titlebar h1{font-size:19px}.makanan-search{width:min(220px,100%)} }
