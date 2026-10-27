@@ -1,332 +1,507 @@
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "./Penerima.css";
+
+const CLAIMS_KEY = "surplus_claims";
+
 const makananList = [
   {
-    id: 1,
+    id: 1, mitraId: "mitra-001",
     restoran: "Restoran sederhana BC",
     makanan: "Ayam Bakar & Lalapan",
-    porsi: 8,
-    batas: "21:30",
-    alamat: "Jl. Engku Putri No.12",
-    harga: 12000,
-    gambar:"https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=500",
+    porsi: 8, batas: "21:30",
+    alamat: "Jl. Engku Putri No.12", harga: 12000,
+    gambar: "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=500",
+    virtualAccount: {
+      BCA: "111111111111", BNI: "222222222222",
+      BRI: "333333333333", Mandiri: "444444444444",
+    },
   },
-
   {
-    id: 2,
+    id: 2, mitraId: "mitra-002",
     restoran: "Warung ibu dwi",
     makanan: "Ayam penyet & Ayam bakar",
-    porsi: 5,
-    batas: "23:00",
-    alamat: "Jl. Bengkong No.2",
-    harga: 0,
-    gambar:"https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=500",
+    porsi: 5, batas: "23:00",
+    alamat: "Jl. Bengkong No.2", harga: 0,
+    gambar: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=500",
+    virtualAccount: {
+      BCA: "555555555555", BNI: "666666666666",
+      BRI: "777777777777", Mandiri: "888888888888",
+    },
   },
-
   {
-    id: 3,
+    id: 3, mitraId: "mitra-003",
     restoran: "Restoran murah meriah",
     makanan: "Ikan Bakar & Asam Manis",
-    porsi: 8,
-    batas: "22:30",
-    alamat: "Jl. Engku Putri No.12",
-    harga: 18000,
-    gambar:"https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=500",
+    porsi: 8, batas: "22:30",
+    alamat: "Jl. Engku Putri No.12", harga: 18000,
+    gambar: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=500",
+    virtualAccount: {
+      BCA: "999999999999", BNI: "1010101010101",
+      BRI: "1212121212121", Mandiri: "1313131313131",
+    },
   },
 ];
+
+const BANKS = ["BCA", "BNI", "BRI", "Mandiri"];
+const METODE = ["Ambil sendiri", "QRIS", "Virtual Account", "Tunai"];
+
+const bacaKlaim = () => {
+  try {
+    const data = JSON.parse(localStorage.getItem(CLAIMS_KEY) || "[]");
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+};
+
+const simpanKlaim = (data) => {
+  localStorage.setItem(CLAIMS_KEY, JSON.stringify(data));
+  window.dispatchEvent(new Event("surplus-claims-updated"));
+};
+
+const formatHarga = (harga) =>
+  harga === 0 ? "Gratis" : `Harga Rp ${harga.toLocaleString("id-ID")}`;
 
 function LogoMakanan() {
   return (
     <svg viewBox="0 0 48 48" fill="none" aria-label="Logo Surplus">
-      <path d="M17 5 C9 10 27 12 18 19 M29 5 C21 10 39 12 30 19 M23 2 C15 7 33 9 24 15"stroke="white"strokeWidth="2.5"strokeLinecap="round"/>
-      <path d="M7 31 C9 22 16 19 24 19 C32 19 39 22 41 31 Z"fill="white"/>
-      <path d="M5 34 H43 M12 38 H36"stroke="white"strokeWidth="2.5"strokeLinecap="round"/>
+      <path d="M17 5 C9 10 27 12 18 19 M29 5 C21 10 39 12 30 19 M23 2 C15 7 33 9 24 15"
+        stroke="white" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M7 31 C9 22 16 19 24 19 C32 19 39 22 41 31 Z" fill="white" />
+      <path d="M5 34 H43 M12 38 H36" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
     </svg>
   );
-
 }
+
 function LogoBanner() {
   return (
     <svg viewBox="0 0 100 100" fill="none" aria-label="Logo Surplus">
       <circle cx="50" cy="50" r="50" fill="#e52529" />
-      <path d="M18 32 C27 42 35 22 49 28 C39 37 46 46 58 52 C73 60 67 77 49 84 C57 69 42 63 32 57 C23 52 27 43 18 32Z"fill="#29292c"/>
-      <path d="M65 19 C78 29 83 43 77 57 C72 49 64 42 66 34 C67 28 69 24 65 19Z"fill="#29292c"/>
-      <path d="M12 24 C18 14 28 8 39 6 C31 13 29 21 32 29 C24 25 18 25 12 24Z"fill="#29292c"/>
+      <path d="M18 32 C27 42 35 22 49 28 C39 37 46 46 58 52 C73 60 67 77 49 84 C57 69 42 63 32 57 C23 52 27 43 18 32Z M65 19 C78 29 83 43 77 57 C72 49 64 42 66 34 C67 28 69 24 65 19Z M12 24 C18 14 28 8 39 6 C31 13 29 21 32 29 C24 25 18 25 12 24Z"
+        fill="#29292c" />
     </svg>
   );
-
 }
+
+function Field({ label, htmlFor, children }) {
+  return (
+    <>
+      <label htmlFor={htmlFor}>{label}</label>
+      {children}
+    </>
+  );
+}
+
 function Penerima() {
   const [cari, setCari] = useState("");
   const [filter, setFilter] = useState("Semua");
-  // Data klaim disimpan dalam state selama halaman masih aktif.
-  const [daftarKlaim, setDaftarKlaim] = useState([]);
+  const [daftarKlaim, setDaftarKlaim] = useState(bacaKlaim);
   const [makananDipilih, setMakananDipilih] = useState(null);
   const [modalKlaimTerbuka, setModalKlaimTerbuka] = useState(false);
   const [modalDaftarTerbuka, setModalDaftarTerbuka] = useState(false);
+
   const [namaLengkap, setNamaLengkap] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [jumlahPorsi, setJumlahPorsi] = useState(1);
   const [metodePengambilan, setMetodePengambilan] = useState("");
+
+  const [bankVA, setBankVA] = useState("BCA");
+  const [buktiPembayaran, setBuktiPembayaran] = useState(null);
+  const [previewBukti, setPreviewBukti] = useState("");
+  const [pesanBukti, setPesanBukti] = useState("");
+
+  useEffect(() => {
+    const muatKlaim = () => setDaftarKlaim(bacaKlaim());
+    window.addEventListener("storage", muatKlaim);
+    window.addEventListener("surplus-claims-updated", muatKlaim);
+
+    return () => {
+      window.removeEventListener("storage", muatKlaim);
+      window.removeEventListener("surplus-claims-updated", muatKlaim);
+    };
+  }, []);
+
   const sisaPorsi = (item) => {
-    const sudahDiklaim = daftarKlaim
-      .filter((klaim) => klaim.idMakanan === item.id)
-      .reduce((total, klaim) => total + klaim.jumlah, 0);
-    return Math.max(0, item.porsi - sudahDiklaim);
+    const terpakai = daftarKlaim
+      .filter((k) => k.idMakanan === item.id && k.status !== "Ditolak")
+      .reduce((total, k) => total + Number(k.jumlah || 0), 0);
+
+    return Math.max(0, item.porsi - terpakai);
   };
+
   const makananTampil = makananList.filter((item) => {
-    const kataKunci = cari.toLowerCase();
+    const kata = cari.toLowerCase();
     const cocokCari =
-      item.restoran.toLowerCase().includes(kataKunci) ||
-      item.makanan.toLowerCase().includes(kataKunci);
+      item.restoran.toLowerCase().includes(kata) ||
+      item.makanan.toLowerCase().includes(kata);
     const cocokFilter =
       filter === "Semua" ||
       (filter === "Gratis" && item.harga === 0) ||
       (filter === "Berbayar" && item.harga > 0);
+
     return cocokCari && cocokFilter && sisaPorsi(item) > 0;
   });
+
+  const resetPembayaran = () => {
+    setBankVA("BCA");
+    setBuktiPembayaran(null);
+    setPreviewBukti("");
+    setPesanBukti("");
+  };
+
   const klaimMakanan = (item) => {
     setMakananDipilih(item);
     setNamaLengkap("");
     setWhatsapp("");
     setJumlahPorsi(1);
     setMetodePengambilan("");
+    resetPembayaran();
     setModalKlaimTerbuka(true);
   };
 
-  const konfirmasiKlaim = (e) => {
+  const pilihBuktiPembayaran = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const tipeDiizinkan = [
+      "image/jpeg", "image/png", "image/webp", "application/pdf",
+    ];
+
+    if (!tipeDiizinkan.includes(file.type)) {
+      setPesanBukti("Format file harus JPG, PNG, WEBP, atau PDF.");
+      setBuktiPembayaran(null);
+      setPreviewBukti("");
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setPesanBukti("Ukuran bukti maksimal 2 MB.");
+      setBuktiPembayaran(null);
+      setPreviewBukti("");
+      e.target.value = "";
+      return;
+    }
+
+    setBuktiPembayaran(file);
+    setPesanBukti("");
+
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = () => setPreviewBukti(reader.result);
+      reader.onerror = () => setPesanBukti("Gagal membaca gambar bukti pembayaran.");
+      reader.readAsDataURL(file);
+    } else {
+      setPreviewBukti("");
+    }
+  };
+
+  const konfirmasiKlaim = async (e) => {
     e.preventDefault();
     if (!makananDipilih) return;
+
     if (!namaLengkap.trim() || !whatsapp.trim() || !metodePengambilan) {
       alert("Lengkapi semua data klaim terlebih dahulu.");
       return;
     }
-    if (!/^[0-9+\\-\s()]{8,20}$/.test(whatsapp.trim())) {
+
+    if (!/^[0-9+\-\s()]{8,20}$/.test(whatsapp.trim())) {
       alert("Masukkan nomor WhatsApp yang valid.");
       return;
     }
+
     const jumlah = Number(jumlahPorsi);
-    const stokTersedia = sisaPorsi(makananDipilih);
-    if (!Number.isInteger(jumlah) || jumlah < 1 || jumlah > stokTersedia) {
+    if (!Number.isInteger(jumlah) || jumlah < 1 || jumlah > sisaPorsi(makananDipilih)) {
       alert("Jumlah porsi melebihi stok yang tersedia.");
       return;
     }
 
-    const klaimBaru = {
-      id: `${Date.now()}-${makananDipilih.id}`,
-      idMakanan: makananDipilih.id,
-      restoran: makananDipilih.restoran,
-      makanan: makananDipilih.makanan,
-      harga: makananDipilih.harga,
-      alamat: makananDipilih.alamat,
-      nama: namaLengkap.trim(),
-      whatsapp: whatsapp.trim(),
-      jumlah,
-      metode: metodePengambilan,
-      status: "Menunggu Konfirmasi",
-    };
-    setDaftarKlaim((sebelumnya) => [...sebelumnya, klaimBaru]);
-    setModalKlaimTerbuka(false);
-    setModalDaftarTerbuka(true);
+    const perluBukti = ["QRIS", "Virtual Account"].includes(metodePengambilan);
+    if (perluBukti && !buktiPembayaran) {
+      alert("Upload bukti pembayaran terlebih dahulu.");
+      return;
+    }
+
+    const nomorVA = metodePengambilan === "Virtual Account"
+      ? makananDipilih.virtualAccount?.[bankVA] || ""
+      : "";
+
+    if (metodePengambilan === "Virtual Account" && !nomorVA) {
+      alert(`Nomor VA ${bankVA} untuk ${makananDipilih.restoran} belum diatur.`);
+      return;
+    }
+
+    try {
+      let buktiData = null;
+
+      if (buktiPembayaran) {
+        buktiData = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error("Gagal membaca bukti pembayaran."));
+          reader.readAsDataURL(buktiPembayaran);
+        });
+      }
+
+      const klaimTersimpan = bacaKlaim();
+      const terpakai = klaimTersimpan
+        .filter((k) => k.idMakanan === makananDipilih.id && k.status !== "Ditolak")
+        .reduce((total, k) => total + Number(k.jumlah || 0), 0);
+
+      if (jumlah > makananDipilih.porsi - terpakai) {
+        alert("Stok baru saja berubah. Silakan coba lagi.");
+        setDaftarKlaim(klaimTersimpan);
+        return;
+      }
+
+      const klaimBaru = {
+        id: `${Date.now()}-${makananDipilih.id}`,
+        idMakanan: makananDipilih.id,
+        mitraId: makananDipilih.mitraId,
+        restoran: makananDipilih.restoran,
+        makanan: makananDipilih.makanan,
+        harga: makananDipilih.harga,
+        alamat: makananDipilih.alamat,
+        nama: namaLengkap.trim(),
+        whatsapp: whatsapp.trim(),
+        jumlah,
+        metode: metodePengambilan,
+        bankVA: metodePengambilan === "Virtual Account" ? bankVA : null,
+        nomorVA: nomorVA || null,
+        buktiPembayaran: buktiData,
+        namaFileBukti: buktiPembayaran?.name || null,
+        waktuKlaim: new Date().toISOString(),
+        status: "Menunggu Konfirmasi",
+        statusPembayaran: perluBukti
+          ? "Menunggu Verifikasi"
+          : "Tidak Memerlukan Pembayaran Online",
+      };
+
+      const semuaKlaim = [...klaimTersimpan, klaimBaru];
+      simpanKlaim(semuaKlaim);
+      setDaftarKlaim(semuaKlaim);
+      setModalKlaimTerbuka(false);
+      setModalDaftarTerbuka(true);
+      resetPembayaran();
+    } catch (error) {
+      console.error(error);
+      alert("Klaim gagal disimpan. Coba gunakan file bukti yang lebih kecil.");
+    }
   };
+
+  const salinNomorVA = async (nomor) => {
+    try {
+      await navigator.clipboard.writeText(nomor);
+      alert("Nomor Virtual Account berhasil disalin.");
+    } catch {
+      alert("Gagal menyalin. Silakan salin nomor secara manual.");
+    }
+  };
+
   const lihatKlaimSaya = () => {
+    setDaftarKlaim(bacaKlaim());
     setModalDaftarTerbuka(true);
   };
+
   const tutupSemuaModal = () => {
     setModalKlaimTerbuka(false);
     setModalDaftarTerbuka(false);
   };
+
+  const tutupJikaLatar = (e, tutup) => {
+    if (e.target === e.currentTarget) tutup();
+  };
+
   return (
     <div className="penerima-page">
       <nav className="penerima-navbar">
-  <Link to="/penerima" className="penerima-brand">
-    <div className="brand-icon">
-      <LogoMakanan />
-    </div>
-    <span>Surplus</span>
-  </Link>
-  <div className="navbar-actions">
-    <Link to="/login" className="navbar-btn">
-      Login
-    </Link>
-    <button
-      type="button"
-      className="navbar-btn klaim-nav-btn"
-      onClick={lihatKlaimSaya}
-    >
-      <span className="klaim-icon" aria-hidden="true">
-        ▣
-      </span>
-      Klaim saya
-    </button>
-  </div>
-</nav>
-      {/* Konten utama */}
+        <Link to="/penerima" className="penerima-brand">
+          <div className="brand-icon"><LogoMakanan /></div>
+          <span>Surplus</span>
+        </Link>
+        <div className="navbar-actions">
+          <Link to="/login" className="navbar-btn">Login</Link>
+          <button type="button" className="navbar-btn klaim-nav-btn" onClick={lihatKlaimSaya}>
+            <span className="klaim-icon" aria-hidden="true">▣</span>
+            Klaim saya
+          </button>
+        </div>
+      </nav>
+
       <main className="penerima-content">
         <section className="welcome-banner">
-          <div className="welcome-logo">
-            <LogoBanner />
-          </div>
+          <div className="welcome-logo"><LogoBanner /></div>
           <div className="welcome-text">
             <h1>Selamat Datang di Surplus!!</h1>
             <p>Cari Makanan Layak Konsumsi Hari Ini</p>
           </div>
         </section>
-        {/* Pencarian dan filter */}
+
         <section className="search-filter">
           <div className="search-box">
-            <svg className="search-icon"viewBox="0 0 24 24"fill="none"aria-hidden="true">
-              <circle cx="10.8"cy="10.8"r="6.8"stroke="currentColor"strokeWidth="2"/>
-              <path d="M16 16 L21 21"stroke="currentColor"strokeWidth="2"strokeLinecap="round"/>
-              </svg>
-              <input type="text"placeholder="Cari nama makanan dan restoran"value={cari}onChange={(e) => setCari(e.target.value)}/>
+            <svg className="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" strokeWidth="2" />
+              <path d="M16 16 L21 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Cari nama makanan dan restoran"
+              value={cari}
+              onChange={(e) => setCari(e.target.value)}
+            />
           </div>
-          <div className="filter-buttons">{["Semua", "Gratis", "Berbayar"].map((item) => (
-              <button key={item}type="button"className={`filter-btn ${filter === item ? "filter-active" : ""}`}onClick={() => setFilter(item)}>
+          <div className="filter-buttons">
+            {["Semua", "Gratis", "Berbayar"].map((item) => (
+              <button
+                key={item}
+                type="button"
+                className={`filter-btn ${filter === item ? "filter-active" : ""}`}
+                onClick={() => setFilter(item)}
+              >
                 {item === "Semua" ? "Semua makanan" : item}
               </button>
             ))}
           </div>
         </section>
-        {/* Kartu makanan */}
-        <section className="food-grid" id="daftar-makanan">{makananTampil.length > 0 ? (makananTampil.map((item) => (
-              <article className="food-card" key={item.id}>
-                <div className="food-image-wrapper">
-                  <span className="food-price">{item.harga === 0? "Gratis": `Harga Rp ${item.harga.toLocaleString("id-ID")}`}</span>
-                  <img src={item.gambar}alt={item.makanan}className="food-image"/>
-                </div>
-                <div className="food-details">
-                  <h3>
-                    <span className="detail-icon" aria-hidden="true">♧</span>{item.restoran}
-                  </h3>
-                  <p className="food-name">{item.makanan}</p>
 
-                  <p>
-                    <span className="detail-icon" aria-hidden="true">▣</span>Sisa: {sisaPorsi(item)} porsi
-                  </p>
-
-                  <p>
-                    <span className="detail-icon" aria-hidden="true">◷</span>Batas ambil hari ini, {item.batas}
-                  </p>
-
-                  <p>
-                    <span className="detail-icon" aria-hidden="true">⌖</span>{item.alamat}
-                  </p>
-                  <button type="button"className="claim-btn"onClick={() => klaimMakanan(item)}disabled={sisaPorsi(item) <= 0}>
-                    {sisaPorsi(item) <= 0 ? "Stok habis" : "Klaim makanan ini"}
-                  </button>
-                </div>
-
-              </article>))) : (
-            <div className="empty-food">Makanan tidak ditemukan atau stok habis.</div>
-          )}
+        <section className="food-grid" id="daftar-makanan">
+          {makananTampil.length ? makananTampil.map((item) => (
+            <article className="food-card" key={item.id}>
+              <div className="food-image-wrapper">
+                <span className="food-price">{formatHarga(item.harga)}</span>
+                <img src={item.gambar} alt={item.makanan} className="food-image" />
+              </div>
+              <div className="food-details">
+                <h3><span className="detail-icon">♧</span>{item.restoran}</h3>
+                <p className="food-name">{item.makanan}</p>
+                <p><span className="detail-icon">▣</span>Sisa: {sisaPorsi(item)} porsi</p>
+                <p><span className="detail-icon">◷</span>Batas ambil hari ini, {item.batas}</p>
+                <p><span className="detail-icon">⌖</span>{item.alamat}</p>
+                <button
+                  type="button"
+                  className="claim-btn"
+                  onClick={() => klaimMakanan(item)}
+                  disabled={sisaPorsi(item) <= 0}
+                >
+                  {sisaPorsi(item) <= 0 ? "Stok habis" : "Klaim makanan ini"}
+                </button>
+              </div>
+            </article>
+          )) : <div className="empty-food">Makanan tidak ditemukan atau stok habis.</div>}
         </section>
       </main>
-      {/* Footer */}
+
       <footer className="penerima-footer">
         © 2026 Surplus - Platform Distribusi Makanan Berlebih.
       </footer>
 
-      {/* Modal formulir klaim makanan */}
       {modalKlaimTerbuka && makananDipilih && (
-        <div className="klaim-overlay"onClick={(e) => {if (e.target === e.currentTarget) setModalKlaimTerbuka(false);}}>
-          <section className="klaim-modal"role="dialog"aria-modal="true"aria-labelledby="judul-form-klaim">
-            <button type="button"className="modal-close"onClick={() => setModalKlaimTerbuka(false)}aria-label="Tutup formulir">
-              &times;
-            </button>
-            <span className="modal-price">{makananDipilih.harga === 0? "Gratis": `Harga Rp ${makananDipilih.harga.toLocaleString("id-ID")}`}</span>
+        <div className="klaim-overlay" onClick={(e) => tutupJikaLatar(e, () => setModalKlaimTerbuka(false))}>
+          <section className="klaim-modal" role="dialog" aria-modal="true" aria-labelledby="judul-form-klaim">
+            <button type="button" className="modal-close" onClick={() => setModalKlaimTerbuka(false)} aria-label="Tutup formulir">&times;</button>
+            <span className="modal-price">{formatHarga(makananDipilih.harga)}</span>
             <h2 id="judul-form-klaim">{makananDipilih.makanan}</h2>
-            <p className="modal-restaurant">
-              Donatur: {makananDipilih.restoran}
-            </p>
+            <p className="modal-restaurant">Donatur: {makananDipilih.restoran}</p>
 
             <form onSubmit={konfirmasiKlaim}>
-              <label htmlFor="namaLengkap">Nama Lengkap/Nama Lembaga</label>
-              <input
-                id="namaLengkap"
-                type="text"
-                placeholder="cth: panti asuhan"
-                value={namaLengkap}
-                onChange={(e) => setNamaLengkap(e.target.value)}
-                required
-              />
-              <label htmlFor="whatsapp">No WhatsApp Aktif</label>
-              <input
-                id="whatsapp"
-                type="tel"
-                placeholder="cth: 081122334455"
-                value={whatsapp}
-                onChange={(e) => setWhatsapp(e.target.value)}
-                required
-              />
-              <label htmlFor="jumlahPorsi">Jumlah Porsi yang Ingin Diklaim</label>
-              <select
-                id="jumlahPorsi"
-                value={jumlahPorsi}
-                onChange={(e) => setJumlahPorsi(Number(e.target.value))}
-                required
-              >
-                {Array.from(
-                  { length: Math.max(0, sisaPorsi(makananDipilih)) },
-                  (_, i) => i + 1
-                ).map((jumlah) => (
-                  <option key={jumlah} value={jumlah}>
-                    {jumlah}
-                  </option>
-                ))}
+              <Field label="Nama Lengkap/Nama Lembaga" htmlFor="namaLengkap">
+                <input id="namaLengkap" type="text" placeholder="cth: panti asuhan" value={namaLengkap} onChange={(e) => setNamaLengkap(e.target.value)} required />
+              </Field>
 
-              </select>
-              <label htmlFor="metodePengambilan">Mode Pengambilan</label>
-              <select
-                id="metodePengambilan"
-                value={metodePengambilan}
-                onChange={(e) => setMetodePengambilan(e.target.value)}
-                required
-              >
-                <option value="">Pilih metode pengambilan</option>
-                <option value="Ambil sendiri">Ambil sendiri</option>
-                <option value="QRIS">QRIS</option>
-                <option value="Virtual Account">Virtual Account</option>
-                <option value="Tunai">Tunai</option>
-              </select>
-              <button type="submit" className="konfirmasi-btn">
-                Konfirmasi klaim makanan
-              </button>
+              <Field label="No WhatsApp Aktif" htmlFor="whatsapp">
+                <input id="whatsapp" type="tel" placeholder="cth: 081122334455" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} required />
+              </Field>
+
+              <Field label="Jumlah Porsi" htmlFor="jumlahPorsi">
+                <select id="jumlahPorsi" value={jumlahPorsi} onChange={(e) => setJumlahPorsi(Number(e.target.value))} required>
+                  {Array.from({ length: sisaPorsi(makananDipilih) }, (_, i) => i + 1).map((jumlah) => (
+                    <option key={jumlah} value={jumlah}>{jumlah} porsi</option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="Metode Pengambilan/Pembayaran" htmlFor="metodePengambilan">
+                <select
+                  id="metodePengambilan"
+                  value={metodePengambilan}
+                  onChange={(e) => {
+                    setMetodePengambilan(e.target.value);
+                    resetPembayaran();
+                  }}
+                  required
+                >
+                  <option value="">Pilih metode</option>
+                  {METODE.map((metode) => <option key={metode} value={metode}>{metode}</option>)}
+                </select>
+              </Field>
+
+              {metodePengambilan === "QRIS" && (
+                <div className="pembayaran-box">
+                  <h3>Pembayaran QRIS</h3>
+                  <p>Scan QRIS resmi milik Mitra, lalu upload bukti pembayaran.</p>
+                  <img
+                    src="/images/qris-merchant.png"
+                    alt="QRIS Mitra"
+                    className="qris-image"
+                    onError={(e) => { e.currentTarget.style.display = "none"; }}
+                  />
+                  <p className="pembayaran-catatan">Pastikan QRIS dan nominal pembayaran benar sebelum melakukan transfer.</p>
+                </div>
+              )}
+
+              {metodePengambilan === "Virtual Account" && (
+                <div className="pembayaran-box">
+                  <h3>Pembayaran Virtual Account</h3>
+                  <Field label="Pilih Bank" htmlFor="bankVA">
+                    <select id="bankVA" value={bankVA} onChange={(e) => setBankVA(e.target.value)}>
+                      {BANKS.map((bank) => <option key={bank} value={bank}>{bank}</option>)}
+                    </select>
+                  </Field>
+                  <label>Nomor Virtual Account Mitra</label>
+                  <div className="va-display">
+                    <span>{makananDipilih.virtualAccount?.[bankVA] || `Nomor VA ${bankVA} belum didaftarkan oleh Mitra`}</span>
+                    {makananDipilih.virtualAccount?.[bankVA] && (
+                      <button type="button" onClick={() => salinNomorVA(makananDipilih.virtualAccount[bankVA])}>Salin</button>
+                    )}
+                  </div>
+                  <p className="pembayaran-catatan">Nomor ditampilkan sesuai bank dan Mitra pemilik makanan yang dipilih.</p>
+                </div>
+              )}
+
+              {["QRIS", "Virtual Account"].includes(metodePengambilan) && (
+                <div className="pembayaran-box">
+                  <Field label="Upload Bukti Pembayaran" htmlFor="buktiPembayaran">
+                    <input
+                      id="buktiPembayaran"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,application/pdf"
+                      onChange={pilihBuktiPembayaran}
+                      required
+                    />
+                  </Field>
+                  {previewBukti && <img src={previewBukti} alt="Preview bukti pembayaran" className="bukti-preview" />}
+                  {buktiPembayaran && <p className="pembayaran-catatan">File: {buktiPembayaran.name}</p>}
+                  {pesanBukti && <p className="pembayaran-error">{pesanBukti}</p>}
+                </div>
+              )}
+
+              <button type="submit" className="konfirmasi-btn">Konfirmasi klaim makanan</button>
             </form>
           </section>
         </div>
       )}
 
-      {/* Modal daftar klaim saya */}
       {modalDaftarTerbuka && (
-        <div
-          className="klaim-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setModalDaftarTerbuka(false);
-          }}
-        >
-
-          <section
-            className="daftar-klaim-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="judul-daftar-klaim"
-          >
-
-            <button
-              type="button"
-              className="modal-close"
-              onClick={() => setModalDaftarTerbuka(false)}
-              aria-label="Tutup daftar klaim"
-            >
-              &times;
-            </button>
+        <div className="klaim-overlay" onClick={(e) => tutupJikaLatar(e, () => setModalDaftarTerbuka(false))}>
+          <section className="daftar-klaim-modal" role="dialog" aria-modal="true" aria-labelledby="judul-daftar-klaim">
+            <button type="button" className="modal-close" onClick={() => setModalDaftarTerbuka(false)} aria-label="Tutup daftar klaim">&times;</button>
             <h2 className="daftar-klaim-title" id="judul-daftar-klaim">
-              <span className="daftar-klaim-icon" aria-hidden="true">▣</span>
-              Daftar Klaim Makanan Anda
+              <span className="daftar-klaim-icon">▣</span> Daftar Klaim Makanan Anda
             </h2>
-            {daftarKlaim.length > 0 ? (
+
+            {daftarKlaim.length ? (
               <div className="daftar-klaim-list">
                 {[...daftarKlaim].reverse().map((klaim) => (
                   <article className="daftar-klaim-card" key={klaim.id}>
@@ -337,14 +512,24 @@ function Penerima() {
                       </div>
                       <span className="klaim-status">{klaim.status}</span>
                     </div>
+
                     <div className="daftar-klaim-info">
                       <span>Jumlah: {klaim.jumlah} porsi</span>
                       <span>Metode: {klaim.metode}</span>
                     </div>
+
                     <div className="klaim-detail-tambahan">
                       <p>Nama: {klaim.nama}</p>
                       <p>WhatsApp: {klaim.whatsapp}</p>
                       <p>Alamat: {klaim.alamat}</p>
+                      {klaim.bankVA && <><p>Bank: {klaim.bankVA}</p><p>Nomor VA: {klaim.nomorVA || "-"}</p></>}
+                      <p>Status pembayaran: {klaim.statusPembayaran}</p>
+                      {klaim.namaFileBukti && <p>File bukti: {klaim.namaFileBukti}</p>}
+                      {klaim.buktiPembayaran && (
+                        <a href={klaim.buktiPembayaran} target="_blank" rel="noreferrer" className="lihat-bukti-link">
+                          Lihat bukti pembayaran
+                        </a>
+                      )}
                     </div>
                   </article>
                 ))}
@@ -352,26 +537,16 @@ function Penerima() {
             ) : (
               <div className="klaim-kosong">
                 <p>Belum ada makanan yang diklaim.</p>
-                <button
-                  type="button"
-                  className="konfirmasi-btn"
-                  onClick={tutupSemuaModal}
-                >
-                  Cari makanan
-                </button>
+                <button type="button" className="konfirmasi-btn" onClick={tutupSemuaModal}>Cari makanan</button>
               </div>
             )}
-            <button
-              type="button"
-              className="tutup-daftar-btn"
-              onClick={() => setModalDaftarTerbuka(false)}
-            >
-              Tutup
-            </button>
+
+            <button type="button" className="tutup-daftar-btn" onClick={() => setModalDaftarTerbuka(false)}>Tutup</button>
           </section>
         </div>
       )}
     </div>
   );
 }
+
 export default Penerima;
