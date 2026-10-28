@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { colors } from '../theme';
 
 const menus = [
@@ -9,6 +10,13 @@ const menus = [
 ];
 
 export default function MitraNavbar({ activePage, setActivePage, namaMitra }) {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('surplus_session');
+    navigate('/login', { replace: true });
+  };
+
   const navStyle = {
     display: 'flex',
     justifyContent: 'space-between',
@@ -57,6 +65,20 @@ export default function MitraNavbar({ activePage, setActivePage, namaMitra }) {
     fontWeight: 'bold'
   };
 
+  const logoutStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    background: 'transparent',
+    color: colors.muted,
+    border: `1px solid ${colors.border}`,
+    borderRadius: '10px',
+    padding: '8px 14px',
+    marginLeft: '4px',
+    fontSize: '0.9rem',
+    cursor: 'pointer'
+  };
+
   return (
     <nav style={navStyle}>
       <div style={brandStyle}>
@@ -79,12 +101,32 @@ export default function MitraNavbar({ activePage, setActivePage, namaMitra }) {
             {menu.label}
           </button>
         ))}
+
         <div style={profileStyle}>
           <svg viewBox="0 0 24 24" fill="#fff" width="24" height="24" aria-hidden="true">
             <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 4a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7zm0 14.2a8 8 0 0 1-6-2.7c.04-2 4-3.1 6-3.1s5.96 1.1 6 3.1a8 8 0 0 1-6 2.7z" />
           </svg>
           {namaMitra}
         </div>
+
+        <button style={logoutStyle} onClick={handleLogout}>
+          <svg
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+          Keluar
+        </button>
       </div>
     </nav>
   );
