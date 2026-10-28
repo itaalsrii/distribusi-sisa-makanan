@@ -6,6 +6,7 @@ import StatCard from './StatCard';
 import StatusMakanan from './StatusMakanan';
 import PanduanKelayakan from './PanduanKelayakan';
 import PengajuanPenerima from './PengajuanPenerima';
+import KatalogMakanan from './KatalogMakanan';
 import { colors } from '../theme';
 
 // baca data Mitra yang lagi login (disimpan oleh Login.jsx)
@@ -17,16 +18,22 @@ function bacaSession() {
   }
 }
 
+// baca array dari localStorage, aman dari error
+function bacaList(key) {
+  try {
+    const data = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
+const samaNama = (a, b) =>
+  String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+
 export default function DashboardMitra() {
   const [session] = useState(bacaSession);
   const [activePage, setActivePage] = useState('home');
-
-  // data sementara, nanti ditambah lewat form upload di menu Katalog Makanan Saya
-  // foto: null = belum ada foto, nanti diisi Base64 dari upload mitra
-  const [daftarMakanan] = useState([
-    { id: 1, nama: 'Mie Ayam', porsi: 5, status: 'menunggu', foto: null },
-    { id: 2, nama: 'Kentang Goreng', porsi: 10, status: 'disalurkan', foto: null }
-  ]);
 
   // belum login atau bukan Mitra -> balik ke halaman login
   if (!session || session.role !== 'mitra') {
@@ -35,14 +42,43 @@ export default function DashboardMitra() {
 
   const namaMitra = session.namaUsaha || session.nama;
 
-  // halaman Pengajuan Penerima dibuat selebar layar
-  const selebarLayar = activePage === 'pengajuan';
+  // halaman Pengajuan dan Katalog dibuat selebar layar
+  const selebarLayar = activePage === 'pengajuan' || activePage === 'makanan';
+
+  // ---------- data asli dari localStorage (dibaca ulang tiap pindah menu) ----------
+  const makananMitra = bacaList('surplus_makanan').filter((m) => samaNama(m.restoran, namaMitra));
+  const klaimMitra = bacaList('surplus_klaim').filter((k) => samaNama(k.restoran, namaMitra));
+
+  const klaimSelesai = klaimMitra.filter((k) => k.status === 'Selesai');
+  const klaimBerjalan = klaimMitra.filter((k) => k.status !== 'Selesai');
+
+  const totalPendapatan = klaimSelesai.reduce(
+    (total, k) => total + Number(k.harga || 0) * Number(k.jumlah || 1),
+    0
+  );
+
+  // makanan dianggap "disalurkan" kalau ada klaim Selesai dengan nama makanan yang sama
+  const daftarMakanan = makananMitra
+    .map((m) => ({
+      id: m.id,
+      nama: m.makanan,
+      porsi: m.porsi,
+      status: klaimSelesai.some((k) => samaNama(k.makanan, m.makanan)) ? 'disalurkan' : 'menunggu',
+      foto: m.gambar || null
+    }))
+    .reverse()
+    .slice(0, 5); // 5 makanan terbaru biar panel nggak kepanjangan
 
   const stats = [
-    { icon: 'package', label: 'Makanan Dibagikan', value: '24 Item', color: '#94a3b8' },
-    { icon: 'clock', label: 'Sedang Tersalurkan', value: '5 Item', color: '#f59e0b' },
-    { icon: 'checkCircle', label: 'Sudah Tersalurkan', value: '18 Item', color: '#22c55e' },
-    { icon: 'dollar', label: 'Total Pendapatan', value: 'Rp 50.000', color: '#22c55e' }
+    { icon: 'package', label: 'Makanan Dibagikan', value: `${makananMitra.length} Item`, color: '#94a3b8' },
+    { icon: 'clock', label: 'Sedang Tersalurkan', value: `${klaimBerjalan.length} Item`, color: '#f59e0b' },
+    { icon: 'checkCircle', label: 'Sudah Tersalurkan', value: `${klaimSelesai.length} Item`, color: '#22c55e' },
+    {
+      icon: 'dollar',
+      label: 'Total Pendapatan',
+      value: `Rp ${totalPendapatan.toLocaleString('id-ID')}`,
+      color: '#22c55e'
+    }
   ];
 
   const pageStyle = {
@@ -113,7 +149,7 @@ export default function DashboardMitra() {
             </div>
           </>
         )}
-        {activePage === 'makanan' && <p>Katalog Makanan Saya (isi menyusul)</p>}
+        {activePage === 'makanan' && <KatalogMakanan namaMitra={namaMitra} />}
         {activePage === 'pengajuan' && <PengajuanPenerima namaMitra={namaMitra} />}
         {activePage === 'laporan' && <p>Laporan (isi menyusul)</p>}
       </main>
