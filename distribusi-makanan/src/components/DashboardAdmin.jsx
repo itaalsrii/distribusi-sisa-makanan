@@ -1,6 +1,39 @@
+
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import "./AdminDashboard.css";
 import AdminProfile from "./AdminProfile";
+
+const KEY_MAKANAN = "surplus_makanan";
+const KEY_AKUN = "surplus_accounts";
+const KEY_KLAIM = "surplus_klaim";
+
+const bacaData = (key) => {
+  try {
+    const data = JSON.parse(localStorage.getItem(key) || "[]");
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error(`Gagal membaca ${key}:`, error);
+    return [];
+  }
+};
+
+const normalisasi = (nilai) =>
+  String(nilai ?? "").trim().toLowerCase();
+
+const bacaTanggal = (item) => {
+  const nilai =
+    item.waktuKlaim ||
+    item.tanggalKlaim ||
+    item.tanggal ||
+    item.createdAt;
+
+  if (!nilai) return null;
+
+  const tanggal = new Date(nilai);
+
+  return Number.isNaN(tanggal.getTime()) ? null : tanggal;
+};
 
 function LogoSurplus() {
   return (
@@ -48,6 +81,18 @@ function LogoBanner() {
 function DashboardAdmin() {
   const location = useLocation();
 
+  const [makanan, setMakanan] = useState(() =>
+    bacaData(KEY_MAKANAN)
+  );
+
+  const [akun, setAkun] = useState(() =>
+    bacaData(KEY_AKUN)
+  );
+
+  const [klaim, setKlaim] = useState(() =>
+    bacaData(KEY_KLAIM)
+  );
+
   const menu = [
     { label: "Beranda", to: "/admin" },
     { label: "Data Pengguna", to: "/admin/pengguna" },
@@ -55,22 +100,157 @@ function DashboardAdmin() {
     { label: "Laporan", to: "/admin/laporan" },
   ];
 
-  const aktivitas = [
-    {
-      no: 1,
-      mitra: "Densiko",
-      penerima: "Ita",
-      makanan: "Naspad",
-      status: "Terkirim",
-    },
-    {
-      no: 2,
-      mitra: "Supermarket",
-      penerima: "Wulan",
-      makanan: "Roti",
-      status: "Selesai",
-    },
-  ];
+  // Memuat ulang data ketika makanan, akun, atau klaim berubah
+  useEffect(() => {
+    const muatData = () => {
+      setMakanan(bacaData(KEY_MAKANAN));
+      setAkun(bacaData(KEY_AKUN));
+      setKlaim(bacaData(KEY_KLAIM));
+    };
+
+    window.addEventListener("storage", muatData);
+    window.addEventListener("surplus-food-updated", muatData);
+    window.addEventListener("surplus-claims-updated", muatData);
+
+    return () => {
+      window.removeEventListener("storage", muatData);
+      window.removeEventListener("surplus-food-updated", muatData);
+      window.removeEventListener("surplus-claims-updated", muatData);
+    };
+  }, []);
+
+  // Total Makanan Surplus: jumlah porsi yang disediakan Mitra
+  const totalMakanan = useMemo(() => {
+    return makanan.reduce((total, item) => {
+      const jumlah = Number(item.porsi ?? item.jumlah ?? 0);
+      return total + (Number.isFinite(jumlah) ? Math.max(0, jumlah) : 0);
+    }, 0);
+  }, [makanan]);
+
+  // Total Mitra berdasarkan akun dengan role Mitra
+  const totalMitra = useMemo(() => {
+    const mitraUnik = new Set();
+
+    akun.forEach((item, index) => {
+      const role = normalisasi(
+        item.role || item.peran || item.jenisAkun
+      );
+
+      if (role !== "mitra") return;
+
+      const identitas =
+        item.id ??
+        item.email ??
+        item.username ??
+        item.namaRestoran ??
+        item.restoran ??
+        `mitra-${index}`;
+
+      mitraUnik.add(normalisasi(identitas));
+    });
+
+    return mitraUnik.size;
+  }, [akun]);
+
+  // Total Penerima Manfaat berdasarkan penerima unik yang pernah klaim
+  const totalPenerima = useMemo(() => {
+    const penerimaUnik = new Set();
+
+    klaim.forEach((item) => {
+      const whatsapp = normalisasi(
+        item.whatsapp || item.noWhatsapp
+      );
+
+      const nama = normalisasi(item.nama || item.penerima);
+
+      if (whatsapp) {
+        penerimaUnik.add(`wa:${whatsapp}`);
+      } else if (nama && nama !== "-") {
+        penerimaUnik.add(`nama:${nama}`);
+      }
+    });
+
+    return penerimaUnik.size;
+  }, [klaim]);
+
+  // Aktivitas terbaru berdasarkan tanggal klaim
+  const aktivitas = useMemo(() => {
+    return klaim
+      .map((item, index) => ({
+        no: index + 1,
+        mitra:
+          item.restoran ||
+          item.namaRestoran ||
+          item.mitra ||
+          "-",
+        penerima: item.nama || item.penerima || "-",
+        makanan: item.makanan || item.namaMakanan || "-",
+        status:
+          item.status ||
+          item.statusPembayaran ||
+          "Menunggu Konfirmasi",
+        tanggal: bacaTanggal(item),
+        index,
+        id: item.id ?? `${item.idMakanan ?? "klaim"}-${index}`,
+      }))
+      .sort((a, b) => {
+        if (a.tanggal && b.tanggal) {
+          return b.tanggal.getTime() - a.tanggal.getTime();
+        }
+
+        if (a.tanggal) return -1;
+        if (b.tanggal) return 1;
+
+        return b.index - a.index;
+      })
+      .slice(0, 5)
+      .map((item, index) => ({ ...item, no: index + 1 }));
+  }, [klaim]);
+
+  // Grafik jumlah klaim per hari selama tujuh hari terakhir
+  const dataGrafik = useMemo(() => {
+    const hariIni = new Date();
+    hariIni.setHours(0, 0, 0, 0);
+
+    const daftarHari = [];
+
+    for (let mundur = 6; mundur >= 0; mundur--) {
+      const tanggal = new Date(hariIni);
+      tanggal.setDate(hariIni.getDate() - mundur);
+
+      daftarHari.push({
+        tanggal,
+        label: tanggal.toLocaleDateString("id-ID", {
+          day: "2-digit",
+          month: "short",
+        }),
+        jumlah: 0,
+      });
+    }
+
+    klaim.forEach((item) => {
+      const tanggalKlaim = bacaTanggal(item);
+      if (!tanggalKlaim) return;
+
+      tanggalKlaim.setHours(0, 0, 0, 0);
+
+      const hari = daftarHari.find(
+        (data) =>
+          data.tanggal.getTime() === tanggalKlaim.getTime()
+      );
+
+      if (hari) {
+        hari.jumlah += 1;
+      }
+    });
+
+    return daftarHari;
+  }, [klaim]);
+
+  const jumlahMaksimum = Math.max(
+    1,
+    ...dataGrafik.map((item) => item.jumlah)
+  );
 
   return (
     <div className="admin-dashboard">
@@ -94,9 +274,8 @@ function DashboardAdmin() {
               {item.label}
             </Link>
           ))}
-          
-          <AdminProfile />
 
+          <AdminProfile />
         </nav>
       </header>
 
@@ -119,7 +298,7 @@ function DashboardAdmin() {
               <div className="stat-icon food-stat-icon">♨</div>
               <div>
                 <p>Total Makanan Surplus</p>
-                <h2>300</h2>
+                <h2>{totalMakanan.toLocaleString("id-ID")}</h2>
               </div>
             </div>
 
@@ -127,7 +306,7 @@ function DashboardAdmin() {
               <div className="stat-icon partner-stat-icon">♧</div>
               <div>
                 <p>Total Mitra</p>
-                <h2>15</h2>
+                <h2>{totalMitra.toLocaleString("id-ID")}</h2>
               </div>
             </div>
 
@@ -135,7 +314,7 @@ function DashboardAdmin() {
               <div className="stat-icon receiver-stat-icon">♧</div>
               <div>
                 <p>Total Penerima Manfaat</p>
-                <h2>150</h2>
+                <h2>{totalPenerima.toLocaleString("id-ID")}</h2>
               </div>
             </div>
           </div>
@@ -146,14 +325,24 @@ function DashboardAdmin() {
             <h2>Grafik Distribusi Makanan</h2>
             <div className="chart-area">
               <div className="chart-bars">
-                {[40, 55, 70, 82, 69, 54, 40].map((tinggi, index) => (
-                  <div
-                    key={index}
-                    className="chart-bar"
-                    style={{ height: `${tinggi}%` }}
-                    title={`Periode ${index + 1}`}
-                  />
-                ))}
+                {dataGrafik.map((item) => {
+                  const tinggi =
+                    item.jumlah === 0
+                      ? 0
+                      : Math.max(
+                          5,
+                          (item.jumlah / jumlahMaksimum) * 100
+                        );
+
+                  return (
+                    <div
+                      key={item.label}
+                      className="chart-bar"
+                      style={{ height: `${tinggi}%` }}
+                      title={`${item.label}: ${item.jumlah} klaim`}
+                    />
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -172,15 +361,23 @@ function DashboardAdmin() {
                   </tr>
                 </thead>
                 <tbody>
-                  {aktivitas.map((item) => (
-                    <tr key={item.no}>
-                      <td>{item.no}</td>
-                      <td>{item.mitra}</td>
-                      <td>{item.penerima}</td>
-                      <td>{item.makanan}</td>
-                      <td>{item.status}</td>
+                  {aktivitas.length > 0 ? (
+                    aktivitas.map((item) => (
+                      <tr key={item.id}>
+                        <td>{item.no}</td>
+                        <td>{item.mitra}</td>
+                        <td>{item.penerima}</td>
+                        <td>{item.makanan}</td>
+                        <td>{item.status}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="5">
+                        Belum ada aktivitas distribusi.
+                      </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>

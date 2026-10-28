@@ -6,6 +6,7 @@ import AdminProfile from "./AdminProfile";
 
 const MAKANAN_KEY = "surplus_makanan";
 
+// Membaca data makanan dari localStorage
 const bacaMakanan = () => {
   try {
     const data = JSON.parse(
@@ -14,63 +15,75 @@ const bacaMakanan = () => {
 
     if (!Array.isArray(data)) return [];
 
-    return data.map((item, index) => ({
-      ...item,
-      id: item.id ?? `makanan-${index}`,
-      nama: item.makanan || item.nama || "-",
-      harga: Number(item.harga) || 0,
-      jumlah: Number(item.porsi ?? item.jumlah ?? 0),
-      ketersediaan:
-        item.ketersediaan ||
-        (item.jam || item.batas
-          ? `Batas ambil ${item.jam || item.batas}`
-          : "Tersedia"),
-      alamat: item.alamat || "-",
-    }));
+    return data.map((item, index) => {
+      const jumlah = Number(item.porsi ?? item.jumlah ?? 0);
+
+      return {
+        ...item,
+        id: item.id ?? `makanan-${index}`,
+        nama: item.makanan || item.nama || "-",
+        harga: item.harga ?? "Gratis",
+        jumlah,
+        ketersediaan: `${jumlah} porsi`,
+        alamat: item.alamat || "-",
+      };
+    });
   } catch (error) {
     console.error("Gagal membaca data makanan:", error);
     return [];
   }
 };
 
-const simpanMakanan = (data) => {
-  localStorage.setItem(MAKANAN_KEY, JSON.stringify(data));
-
-  // Memberi tahu halaman lain bahwa data makanan berubah
-  window.dispatchEvent(new Event("surplus-food-updated"));
-};
-
+// Format harga makanan
 const formatHarga = (harga) => {
-  const nilai = Number(harga) || 0;
+  if (
+    harga === undefined ||
+    harga === null ||
+    String(harga).trim() === "" ||
+    String(harga).toLowerCase() === "gratis" ||
+    Number(harga) === 0
+  ) {
+    return "Gratis";
+  }
 
-  return nilai === 0
-    ? "Gratis"
-    : `Rp ${nilai.toLocaleString("id-ID")}`;
+  if (String(harga).toLowerCase().includes("rp")) {
+    return harga;
+  }
+
+  return `Rp ${Number(harga).toLocaleString("id-ID")}`;
 };
 
 function DashboardMakanan() {
-  const [makanan, setMakanan] = useState(bacaMakanan);
+  const [makanan, setMakanan] = useState(() => bacaMakanan());
   const [pencarian, setPencarian] = useState("");
 
   const location = useLocation();
 
-  // Sinkronisasi data ketika ada perubahan dari halaman lain
+  // Simpan perubahan ke localStorage
+  const simpanMakanan = (daftar) => {
+    localStorage.setItem(MAKANAN_KEY, JSON.stringify(daftar));
+    setMakanan(bacaMakanan());
+
+    // Beri tahu halaman lain bahwa data makanan berubah
+    window.dispatchEvent(new Event("surplus-food-updated"));
+  };
+
+  // Memperbarui data ketika makanan berubah di halaman lain
   useEffect(() => {
-    const muatMakanan = () => {
+    const muatData = () => {
       setMakanan(bacaMakanan());
     };
 
-    muatMakanan();
-
-    window.addEventListener("storage", muatMakanan);
-    window.addEventListener("surplus-food-updated", muatMakanan);
+    window.addEventListener("storage", muatData);
+    window.addEventListener("surplus-food-updated", muatData);
 
     return () => {
-      window.removeEventListener("storage", muatMakanan);
-      window.removeEventListener("surplus-food-updated", muatMakanan);
+      window.removeEventListener("storage", muatData);
+      window.removeEventListener("surplus-food-updated", muatData);
     };
   }, []);
 
+  // Pencarian berdasarkan nama, harga, jumlah, dan alamat
   const hasilPencarian = useMemo(() => {
     const keyword = pencarian.toLowerCase().trim();
 
@@ -83,48 +96,45 @@ function DashboardMakanan() {
         String(item.jumlah),
         item.ketersediaan,
         item.alamat,
-        item.restoran || "",
       ].some((nilai) =>
         String(nilai).toLowerCase().includes(keyword)
       )
     );
   }, [makanan, pencarian]);
 
+  // Menghapus makanan
   const hapusMakanan = (id) => {
     if (!window.confirm("Yakin ingin menghapus data makanan ini?")) {
       return;
     }
 
-    const dataTerbaru = bacaMakanan();
-    const dataBaru = dataTerbaru.filter(
-      (item) => String(item.id) !== String(id)
+    const daftarAsli = JSON.parse(
+      localStorage.getItem(MAKANAN_KEY) || "[]"
     );
 
-    simpanMakanan(dataBaru);
-    setMakanan(dataBaru);
+    const daftarBaru = daftarAsli.filter(
+      (item, index) =>
+        String(item.id ?? `makanan-${index}`) !== String(id)
+    );
+
+    simpanMakanan(daftarBaru);
   };
 
+  // Mengedit makanan tanpa menghapus batas waktu pengambilan
   const editMakanan = (item) => {
     const nama = window.prompt("Nama makanan:", item.nama);
 
     if (nama === null || !nama.trim()) return;
 
-    const hargaInput = window.prompt(
+    const harga = window.prompt(
       "Harga makanan (isi 0 jika gratis):",
-      String(item.harga)
+      String(item.harga === "Gratis" ? 0 : item.harga).replace(/^Rp\s*/i, "")
     );
 
-    if (hargaInput === null || !hargaInput.trim()) return;
-
-    const harga = Number(hargaInput);
-
-    if (!Number.isFinite(harga) || harga < 0) {
-      window.alert("Harga harus berupa angka 0 atau lebih.");
-      return;
-    }
+    if (harga === null || !harga.trim()) return;
 
     const jumlahInput = window.prompt(
-      "Jumlah porsi:",
+      "Jumlah makanan yang disediakan Mitra (porsi):",
       String(item.jumlah)
     );
 
@@ -132,49 +142,43 @@ function DashboardMakanan() {
 
     const jumlah = Number(jumlahInput);
 
-    if (!Number.isInteger(jumlah) || jumlah < 0) {
-      window.alert("Jumlah porsi harus berupa bilangan bulat 0 atau lebih.");
+    if (!Number.isFinite(jumlah) || jumlah < 0) {
+      alert("Jumlah makanan harus berupa angka 0 atau lebih.");
       return;
     }
 
     const alamat = window.prompt("Alamat:", item.alamat);
 
-    if (alamat === null) return;
+    if (alamat === null || !alamat.trim()) return;
 
-    // Baca data asli agar field lain milik Mitra tidak hilang
-    const dataAsli = JSON.parse(
+    const daftarAsli = JSON.parse(
       localStorage.getItem(MAKANAN_KEY) || "[]"
     );
 
-    const dataBaru = dataAsli.map((data, index) => {
-      const idData = data.id ?? `makanan-${index}`;
+    const indexMakanan = daftarAsli.findIndex(
+      (data, index) =>
+        String(data.id ?? `makanan-${index}`) === String(item.id)
+    );
 
-      if (String(idData) !== String(item.id)) {
-        return data;
-      }
+    if (indexMakanan === -1) {
+      alert("Data makanan tidak ditemukan.");
+      setMakanan(bacaMakanan());
+      return;
+    }
 
-      return {
-        ...data,
+    const dataLama = daftarAsli[indexMakanan];
 
-        // Nama makanan dibaca oleh halaman Penerima
-        makanan: nama.trim(),
-        nama: nama.trim(),
+    daftarAsli[indexMakanan] = {
+      ...dataLama,
+      makanan: nama.trim(),
+      nama: nama.trim(),
+      harga: Number(harga) === 0 ? 0 : Number(harga),
+      porsi: jumlah,
+      jumlah,
+      alamat: alamat.trim(),
+    };
 
-        // Harga harus berupa angka agar filter Penerima berfungsi
-        harga,
-
-        // Penerima menggunakan field porsi
-        porsi: jumlah,
-        jumlah,
-
-        alamat: alamat.trim(),
-      };
-    });
-
-    simpanMakanan(dataBaru);
-    setMakanan(bacaMakanan());
-
-    window.alert("Data makanan berhasil diperbarui.");
+    simpanMakanan(daftarAsli);
   };
 
   const menu = [
@@ -265,7 +269,10 @@ function DashboardMakanan() {
                       <td>{item.nama}</td>
                       <td>{formatHarga(item.harga)}</td>
                       <td>{item.jumlah}</td>
+
+                      {/* Jumlah makanan yang disediakan Mitra */}
                       <td>{item.ketersediaan}</td>
+
                       <td>{item.alamat}</td>
 
                       <td>
@@ -277,17 +284,8 @@ function DashboardMakanan() {
                             aria-label={`Edit ${item.nama}`}
                             title="Edit"
                           >
-                            <svg
-                              viewBox="0 0 24 24"
-                              aria-hidden="true"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M12 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9" />
-                              <path d="m15 3 6 6M10 14l-1 4 4-1L22 8l-5-5z" />
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                              <path d="M12 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9M15 3l6 6M10 14l-1 4 4-1L22 8l-5-5z" />
                             </svg>
                           </button>
 
@@ -298,15 +296,7 @@ function DashboardMakanan() {
                             aria-label={`Hapus ${item.nama}`}
                             title="Hapus"
                           >
-                            <svg
-                              viewBox="0 0 24 24"
-                              aria-hidden="true"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
                               <path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14M10 10v8M14 10v8" />
                             </svg>
                           </button>
@@ -317,9 +307,9 @@ function DashboardMakanan() {
                 ) : (
                   <tr>
                     <td colSpan="6" className="makanan-empty">
-                      {pencarian
-                        ? "Data makanan tidak ditemukan."
-                        : "Belum ada data makanan dari Mitra."}
+                      {makanan.length === 0
+                        ? "Belum ada data makanan dari Mitra."
+                        : "Data makanan tidak ditemukan."}
                     </td>
                   </tr>
                 )}
