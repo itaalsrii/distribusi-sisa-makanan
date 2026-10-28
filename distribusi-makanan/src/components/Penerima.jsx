@@ -6,42 +6,6 @@ const CLAIMS_KEY = "surplus_klaim";
 const MAKANAN_KEY = "surplus_makanan";
 
 const makananList = [
-  {
-    id: 1, mitraId: "mitra-001",
-    restoran: "Restoran sederhana BC",
-    makanan: "Ayam Bakar & Lalapan",
-    porsi: 8, batas: "21:30",
-    alamat: "Jl. Engku Putri No.12", harga: 12000,
-    gambar: "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=500",
-    virtualAccount: {
-      BCA: "111111111111", BNI: "222222222222",
-      BRI: "333333333333", Mandiri: "444444444444",
-    },
-  },
-  {
-    id: 2, mitraId: "mitra-002",
-    restoran: "Warung ibu dwi",
-    makanan: "Ayam penyet & Ayam bakar",
-    porsi: 5, batas: "23:00",
-    alamat: "Jl. Bengkong No.2", harga: 0,
-    gambar: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=500",
-    virtualAccount: {
-      BCA: "555555555555", BNI: "666666666666",
-      BRI: "777777777777", Mandiri: "888888888888",
-    },
-  },
-  {
-    id: 3, mitraId: "mitra-003",
-    restoran: "Restoran murah meriah",
-    makanan: "Ikan Bakar & Asam Manis",
-    porsi: 8, batas: "22:30",
-    alamat: "Jl. Engku Putri No.12", harga: 18000,
-    gambar: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=500",
-    virtualAccount: {
-      BCA: "999999999999", BNI: "1010101010101",
-      BRI: "1212121212121", Mandiri: "1313131313131",
-    },
-  },
 ];
 
 const BANKS = ["BCA", "BNI", "BRI", "Mandiri"];
@@ -125,19 +89,22 @@ function Penerima() {
   const [previewBukti, setPreviewBukti] = useState("");
   const [pesanBukti, setPesanBukti] = useState("");
 
-  useEffect(() => {
-    const muatKlaim = () => {
-      setDaftarKlaim(bacaKlaim());
-      setMakananMitra(bacaMakananMitra());
-    };
-    window.addEventListener("storage", muatKlaim);
-    window.addEventListener("surplus-claims-updated", muatKlaim);
+useEffect(() => {
+  const muatKlaim = () => {
+    setDaftarKlaim(bacaKlaim());
+    setMakananMitra(bacaMakananMitra());
+  };
 
-    return () => {
-      window.removeEventListener("storage", muatKlaim);
-      window.removeEventListener("surplus-claims-updated", muatKlaim);
-    };
-  }, []);
+  window.addEventListener("storage", muatKlaim);
+  window.addEventListener("surplus-claims-updated", muatKlaim);
+  window.addEventListener("surplus-food-updated", muatKlaim);
+
+  return () => {
+    window.removeEventListener("storage", muatKlaim);
+    window.removeEventListener("surplus-claims-updated", muatKlaim);
+    window.removeEventListener("surplus-food-updated", muatKlaim);
+  };
+}, []);
 
   const sisaPorsi = (item) => {
     const terpakai = daftarKlaim

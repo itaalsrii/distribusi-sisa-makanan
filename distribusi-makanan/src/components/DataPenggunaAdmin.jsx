@@ -1,7 +1,75 @@
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import "./DataPenggunaAdmin.css";
 import AdminProfile from "./AdminProfile";
+
+const ACCOUNTS_KEY = "surplus_accounts";
+const CLAIMS_KEY = "surplus_klaim";
+
+function bacaDataPengguna() {
+  try {
+    const accounts = JSON.parse(
+      localStorage.getItem(ACCOUNTS_KEY) || "[]"
+    );
+
+    const klaim = JSON.parse(
+      localStorage.getItem(CLAIMS_KEY) || "[]"
+    );
+
+    // Data akun Admin dan Mitra
+    const dataAkun = accounts.map((account, index) => ({
+      id: account.id || `akun-${index}`,
+      nama:
+        account.namaPemilik ||
+        account.namaUsaha ||
+        account.nama ||
+        "-",
+      email: account.email || "-",
+      kontak: account.noHp || account.whatsapp || "-",
+      peran:
+        String(account.role || "").toLowerCase() === "mitra"
+          ? "Mitra"
+          : String(account.role || "").toLowerCase() === "admin"
+            ? "Admin"
+            : account.role || "Pengguna",
+      status: account.status || "Aktif",
+      sumber: "akun",
+      accountId: account.id || null,
+    }));
+
+    // Data Penerima diambil dari klaim makanan
+    // Nomor WhatsApp digunakan untuk mencegah data ganda
+    const penerimaUnik = new Map();
+
+    klaim.forEach((item) => {
+      const nama = String(item.nama || "").trim();
+      const whatsapp = String(item.whatsapp || "").trim();
+
+      if (!nama || !whatsapp) return;
+
+      const kunci = whatsapp.replace(/[\s\-+()]/g, "");
+
+      if (!penerimaUnik.has(kunci)) {
+        penerimaUnik.set(kunci, {
+          id: `penerima-${kunci}`,
+          nama,
+          email: "-",
+          kontak: whatsapp,
+          peran: "Penerima",
+          status: "Aktif",
+          sumber: "klaim",
+          whatsappAsli: whatsapp,
+        });
+      }
+    });
+
+    return [...dataAkun, ...penerimaUnik.values()];
+  } catch (error) {
+    console.error("Gagal membaca data pengguna:", error);
+    return [];
+  }
+}
 
 function LogoSurplus() {
   return (
@@ -31,14 +99,6 @@ function UserIcon() {
     <svg viewBox="0 0 48 48" fill="currentColor" aria-hidden="true">
       <circle cx="24" cy="14" r="11" />
       <path d="M5 43v-5c0-8 8-13 19-13s19 5 19 13v5H5z" />
-    </svg>
-  );
-}
-
-function AdminIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4a3.2 3.2 0 1 1 0 6.4A3.2 3.2 0 0 1 12 6Zm0 13a7 7 0 0 1-5.5-2.7c.1-2.1 3.7-3.3 5.5-3.3s5.4 1.2 5.5 3.3A7 7 0 0 1 12 19Z" />
     </svg>
   );
 }
@@ -98,36 +158,39 @@ function DeleteIcon() {
 
 function DataPengguna() {
   const [search, setSearch] = useState("");
-const [pengguna, setPengguna] = useState(() => {
-  try {
-    const accounts = JSON.parse(
-      localStorage.getItem("surplus_accounts") || "[]"
-    );
-
-    return accounts.map((account, index) => ({
-      id: account.id || index + 1,
-      nama: account.namaPemilik || account.namaUsaha || "-",
-      email: account.email || "-",
-      kontak: account.noHp || "-",
-      peran: account.role === "mitra" ? "Mitra" : account.role,
-      status: account.status || "Aktif",
-    }));
-  } catch {
-    return [];
-  }
-});
-
+  const [pengguna, setPengguna] = useState(bacaDataPengguna);
   const [editId, setEditId] = useState(null);
   const [formEdit, setFormEdit] = useState({});
   const [pesan, setPesan] = useState("");
 
   const location = useLocation();
+
   const menu = [
     { label: "Beranda", to: "/admin" },
     { label: "Data Pengguna", to: "/admin/pengguna" },
     { label: "Data Makanan", to: "/admin/makanan" },
     { label: "Laporan", to: "/admin/laporan" },
   ];
+
+  // Memuat ulang data saat halaman dibuka atau data klaim berubah
+  useEffect(() => {
+    const muatDataPengguna = () => {
+      setPengguna(bacaDataPengguna());
+    };
+
+    muatDataPengguna();
+
+    window.addEventListener("storage", muatDataPengguna);
+    window.addEventListener("surplus-claims-updated", muatDataPengguna);
+
+    return () => {
+      window.removeEventListener("storage", muatDataPengguna);
+      window.removeEventListener(
+        "surplus-claims-updated",
+        muatDataPengguna
+      );
+    };
+  }, []);
 
   const hasilPencarian = pengguna.filter((item) =>
     `${item.nama} ${item.email} ${item.kontak} ${item.peran} ${item.status}`
@@ -141,15 +204,96 @@ const [pengguna, setPengguna] = useState(() => {
     setPesan("");
   };
 
+  // Menyimpan perubahan akun Admin/Mitra ke localStorage
   const simpanEdit = (e) => {
     e.preventDefault();
 
-    setPengguna((sebelumnya) =>
-      sebelumnya.map((item) =>
-        item.id === editId ? { ...formEdit } : item
-      )
-    );
+    const dataBaru = {
+      ...formEdit,
+      nama: formEdit.nama.trim(),
+      email: formEdit.email.trim(),
+      kontak: formEdit.kontak.trim(),
+    };
 
+    if (dataBaru.sumber === "akun") {
+      try {
+        const accounts = JSON.parse(
+          localStorage.getItem(ACCOUNTS_KEY) || "[]"
+        );
+
+        const accountsBaru = accounts.map((account, index) => {
+          const id = account.id || `akun-${index}`;
+
+          if (id !== editId) return account;
+
+          return {
+            ...account,
+            namaPemilik:
+              dataBaru.peran === "Mitra"
+                ? dataBaru.nama
+                : account.namaPemilik,
+            namaUsaha:
+              dataBaru.peran === "Mitra"
+                ? dataBaru.nama
+                : account.namaUsaha,
+            nama:
+              dataBaru.peran === "Admin"
+                ? dataBaru.nama
+                : account.nama,
+            email: dataBaru.email,
+            noHp: dataBaru.kontak,
+            role: dataBaru.peran.toLowerCase(),
+            status: dataBaru.status,
+          };
+        });
+
+        localStorage.setItem(
+          ACCOUNTS_KEY,
+          JSON.stringify(accountsBaru)
+        );
+      } catch (error) {
+        console.error("Gagal menyimpan akun:", error);
+        setPesan("Gagal menyimpan perubahan akun.");
+        return;
+      }
+    } else if (dataBaru.sumber === "klaim") {
+      // Nama dan nomor kontak penerima berasal dari data klaim.
+      // Perubahan diterapkan pada semua klaim dengan nomor yang sama.
+      try {
+        const klaim = JSON.parse(
+          localStorage.getItem(CLAIMS_KEY) || "[]"
+        );
+
+        const nomorLama = String(
+          dataBaru.whatsappAsli || dataBaru.kontak
+        ).replace(/[\s\-+()]/g, "");
+
+        const klaimBaru = klaim.map((item) => {
+          const nomorItem = String(item.whatsapp || "").replace(
+            /[\s\-+()]/g,
+            ""
+          );
+
+          if (nomorItem !== nomorLama) return item;
+
+          return {
+            ...item,
+            nama: dataBaru.nama,
+            whatsapp: dataBaru.kontak,
+          };
+        });
+
+        localStorage.setItem(CLAIMS_KEY, JSON.stringify(klaimBaru));
+
+        window.dispatchEvent(new Event("surplus-claims-updated"));
+      } catch (error) {
+        console.error("Gagal menyimpan data penerima:", error);
+        setPesan("Gagal menyimpan perubahan data penerima.");
+        return;
+      }
+    }
+
+    setPengguna(bacaDataPengguna());
     setEditId(null);
     setPesan("Data pengguna berhasil diperbarui.");
   };
@@ -161,12 +305,53 @@ const [pengguna, setPengguna] = useState(() => {
 
     if (!yakin) return;
 
-    setPengguna((sebelumnya) =>
-      sebelumnya.filter((data) => data.id !== item.id)
-    );
-    setPesan("Data pengguna berhasil dihapus.");
+    try {
+      if (item.sumber === "akun") {
+        const accounts = JSON.parse(
+          localStorage.getItem(ACCOUNTS_KEY) || "[]"
+        );
+
+        const accountsBaru = accounts.filter((account, index) => {
+          const id = account.id || `akun-${index}`;
+          return id !== item.id;
+        });
+
+        localStorage.setItem(
+          ACCOUNTS_KEY,
+          JSON.stringify(accountsBaru)
+        );
+      } else if (item.sumber === "klaim") {
+        // Menghapus data klaim milik penerima ini.
+        // Catatan: semua riwayat klaim dengan nomor yang sama ikut terhapus.
+        const klaim = JSON.parse(
+          localStorage.getItem(CLAIMS_KEY) || "[]"
+        );
+
+        const nomorHapus = String(
+          item.whatsappAsli || item.kontak
+        ).replace(/[\s\-+()]/g, "");
+
+        const klaimBaru = klaim.filter((data) => {
+          const nomorData = String(data.whatsapp || "").replace(
+            /[\s\-+()]/g,
+            ""
+          );
+
+          return nomorData !== nomorHapus;
+        });
+
+        localStorage.setItem(CLAIMS_KEY, JSON.stringify(klaimBaru));
+
+        window.dispatchEvent(new Event("surplus-claims-updated"));
+      }
+
+      setPengguna(bacaDataPengguna());
+      setPesan("Data pengguna berhasil dihapus.");
+    } catch (error) {
+      console.error("Gagal menghapus data pengguna:", error);
+      setPesan("Gagal menghapus data pengguna.");
+    }
   };
-  
 
   return (
     <div className="users-page">
@@ -191,8 +376,7 @@ const [pengguna, setPengguna] = useState(() => {
             </Link>
           ))}
 
-<AdminProfile />
-
+          <AdminProfile />
         </nav>
       </header>
 
@@ -245,9 +429,13 @@ const [pengguna, setPengguna] = useState(() => {
                 <tr key={item.id}>
                   <td>{item.nama}</td>
                   <td>
-                    <a href={`mailto:${item.email}`}>
-                      {item.email}
-                    </a>
+                    {item.email !== "-" ? (
+                      <a href={`mailto:${item.email}`}>
+                        {item.email}
+                      </a>
+                    ) : (
+                      item.email
+                    )}
                   </td>
                   <td>{item.kontak}</td>
                   <td>{item.peran}</td>
@@ -313,14 +501,14 @@ const [pengguna, setPengguna] = useState(() => {
               Email
               <input
                 type="email"
-                value={formEdit.email || ""}
+                value={formEdit.email === "-" ? "" : formEdit.email || ""}
                 onChange={(e) =>
                   setFormEdit({
                     ...formEdit,
                     email: e.target.value,
                   })
                 }
-                required
+                required={formEdit.sumber === "akun"}
               />
             </label>
 
@@ -348,7 +536,9 @@ const [pengguna, setPengguna] = useState(() => {
                     peran: e.target.value,
                   })
                 }
+                disabled={formEdit.sumber === "klaim"}
               >
+                <option value="Admin">Admin</option>
                 <option value="Mitra">Mitra</option>
                 <option value="Penerima">Penerima</option>
               </select>
