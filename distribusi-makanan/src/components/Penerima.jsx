@@ -1,9 +1,9 @@
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "./Penerima.css";
 
-const CLAIMS_KEY = "surplus_claims";
+const CLAIMS_KEY = "surplus_klaim";
+const MAKANAN_KEY = "surplus_makanan";
 
 const makananList = [
   {
@@ -61,6 +61,18 @@ const simpanKlaim = (data) => {
   window.dispatchEvent(new Event("surplus-claims-updated"));
 };
 
+// makanan yang dibagikan Mitra lewat Katalog Makanan Saya
+const bacaMakananMitra = () => {
+  try {
+    const data = JSON.parse(localStorage.getItem(MAKANAN_KEY) || "[]");
+    if (!Array.isArray(data)) return [];
+    // Mitra nyimpen jam ambil di field "jam", kartu penerima butuh "batas"
+    return data.map((m) => ({ ...m, batas: m.jam || m.batas }));
+  } catch {
+    return [];
+  }
+};
+
 const formatHarga = (harga) =>
   harga === 0 ? "Gratis" : `Harga Rp ${harga.toLocaleString("id-ID")}`;
 
@@ -98,6 +110,7 @@ function Penerima() {
   const [cari, setCari] = useState("");
   const [filter, setFilter] = useState("Semua");
   const [daftarKlaim, setDaftarKlaim] = useState(bacaKlaim);
+  const [makananMitra, setMakananMitra] = useState(bacaMakananMitra);
   const [makananDipilih, setMakananDipilih] = useState(null);
   const [modalKlaimTerbuka, setModalKlaimTerbuka] = useState(false);
   const [modalDaftarTerbuka, setModalDaftarTerbuka] = useState(false);
@@ -113,7 +126,10 @@ function Penerima() {
   const [pesanBukti, setPesanBukti] = useState("");
 
   useEffect(() => {
-    const muatKlaim = () => setDaftarKlaim(bacaKlaim());
+    const muatKlaim = () => {
+      setDaftarKlaim(bacaKlaim());
+      setMakananMitra(bacaMakananMitra());
+    };
     window.addEventListener("storage", muatKlaim);
     window.addEventListener("surplus-claims-updated", muatKlaim);
 
@@ -131,7 +147,10 @@ function Penerima() {
     return Math.max(0, item.porsi - terpakai);
   };
 
-  const makananTampil = makananList.filter((item) => {
+  // makanan bawaan + makanan yang dibagikan Mitra
+  const semuaMakanan = [...makananList, ...makananMitra];
+
+  const makananTampil = semuaMakanan.filter((item) => {
     const kata = cari.toLowerCase();
     const cocokCari =
       item.restoran.toLowerCase().includes(kata) ||
@@ -259,7 +278,7 @@ function Penerima() {
       const klaimBaru = {
         id: `${Date.now()}-${makananDipilih.id}`,
         idMakanan: makananDipilih.id,
-        mitraId: makananDipilih.mitraId,
+        mitraId: makananDipilih.mitraId || null,
         restoran: makananDipilih.restoran,
         makanan: makananDipilih.makanan,
         harga: makananDipilih.harga,
@@ -302,6 +321,7 @@ function Penerima() {
 
   const lihatKlaimSaya = () => {
     setDaftarKlaim(bacaKlaim());
+    setMakananMitra(bacaMakananMitra());
     setModalDaftarTerbuka(true);
   };
 
@@ -371,7 +391,7 @@ function Penerima() {
             <article className="food-card" key={item.id}>
               <div className="food-image-wrapper">
                 <span className="food-price">{formatHarga(item.harga)}</span>
-                <img src={item.gambar} alt={item.makanan} className="food-image" />
+                {item.gambar && <img src={item.gambar} alt={item.makanan} className="food-image" />}
               </div>
               <div className="food-details">
                 <h3><span className="detail-icon">♧</span>{item.restoran}</h3>
