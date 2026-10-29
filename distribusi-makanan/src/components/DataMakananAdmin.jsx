@@ -5,13 +5,12 @@ import "./DataMakananAdmin.css";
 import AdminProfile from "./AdminProfile";
 
 const MAKANAN_KEY = "surplus_makanan";
+const KLAIM_KEY = "surplus_klaim";
 
 // Membaca data makanan dari localStorage
 const bacaMakanan = () => {
   try {
-    const data = JSON.parse(
-      localStorage.getItem(MAKANAN_KEY) || "[]"
-    );
+    const data = JSON.parse(localStorage.getItem(MAKANAN_KEY) || "[]");
 
     if (!Array.isArray(data)) return [];
 
@@ -30,6 +29,17 @@ const bacaMakanan = () => {
     });
   } catch (error) {
     console.error("Gagal membaca data makanan:", error);
+    return [];
+  }
+};
+
+// Membaca data klaim
+const bacaKlaim = () => {
+  try {
+    const data = JSON.parse(localStorage.getItem(KLAIM_KEY) || "[]");
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error("Gagal membaca data klaim:", error);
     return [];
   }
 };
@@ -55,35 +65,53 @@ const formatHarga = (harga) => {
 
 function DashboardMakanan() {
   const [makanan, setMakanan] = useState(() => bacaMakanan());
+  const [klaim, setKlaim] = useState(() => bacaKlaim());
   const [pencarian, setPencarian] = useState("");
 
   const location = useLocation();
 
-  // Simpan perubahan ke localStorage
+  // Menghitung porsi dari klaim yang sudah selesai
+  const hitungTersalurkan = (item) => {
+    return klaim
+      .filter(
+        (data) =>
+          String(data.idMakanan) === String(item.id) &&
+          String(data.status).toLowerCase().trim() === "selesai"
+      )
+      .reduce((total, data) => total + Number(data.jumlah || 0), 0);
+  };
+
+  // Menyimpan perubahan data makanan
   const simpanMakanan = (daftar) => {
     localStorage.setItem(MAKANAN_KEY, JSON.stringify(daftar));
     setMakanan(bacaMakanan());
-
-    // Beri tahu halaman lain bahwa data makanan berubah
     window.dispatchEvent(new Event("surplus-food-updated"));
   };
 
-  // Memperbarui data ketika makanan berubah di halaman lain
+  // Memperbarui data makanan dan klaim
   useEffect(() => {
-    const muatData = () => {
-      setMakanan(bacaMakanan());
+    const muatMakanan = () => setMakanan(bacaMakanan());
+    const muatKlaim = () => setKlaim(bacaKlaim());
+
+    const muatSemua = () => {
+      muatMakanan();
+      muatKlaim();
     };
 
-    window.addEventListener("storage", muatData);
-    window.addEventListener("surplus-food-updated", muatData);
+    window.addEventListener("storage", muatSemua);
+    window.addEventListener("surplus-food-updated", muatMakanan);
+    window.addEventListener("surplus-makanan-updated", muatMakanan);
+    window.addEventListener("surplus-claims-updated", muatKlaim);
 
     return () => {
-      window.removeEventListener("storage", muatData);
-      window.removeEventListener("surplus-food-updated", muatData);
+      window.removeEventListener("storage", muatSemua);
+      window.removeEventListener("surplus-food-updated", muatMakanan);
+      window.removeEventListener("surplus-makanan-updated", muatMakanan);
+      window.removeEventListener("surplus-claims-updated", muatKlaim);
     };
   }, []);
 
-  // Pencarian berdasarkan nama, harga, jumlah, dan alamat
+  // Pencarian berdasarkan data makanan
   const hasilPencarian = useMemo(() => {
     const keyword = pencarian.toLowerCase().trim();
 
@@ -95,12 +123,13 @@ function DashboardMakanan() {
         formatHarga(item.harga),
         String(item.jumlah),
         item.ketersediaan,
+        String(hitungTersalurkan(item)),
         item.alamat,
       ].some((nilai) =>
         String(nilai).toLowerCase().includes(keyword)
       )
     );
-  }, [makanan, pencarian]);
+  }, [makanan, klaim, pencarian]);
 
   // Menghapus makanan
   const hapusMakanan = (id) => {
@@ -120,7 +149,7 @@ function DashboardMakanan() {
     simpanMakanan(daftarBaru);
   };
 
-  // Mengedit makanan tanpa menghapus batas waktu pengambilan
+  // Mengedit data makanan yang disediakan Mitra
   const editMakanan = (item) => {
     const nama = window.prompt("Nama makanan:", item.nama);
 
@@ -128,7 +157,10 @@ function DashboardMakanan() {
 
     const harga = window.prompt(
       "Harga makanan (isi 0 jika gratis):",
-      String(item.harga === "Gratis" ? 0 : item.harga).replace(/^Rp\s*/i, "")
+      String(item.harga === "Gratis" ? 0 : item.harga).replace(
+        /^Rp\s*/i,
+        ""
+      )
     );
 
     if (harga === null || !harga.trim()) return;
@@ -237,9 +269,7 @@ function DashboardMakanan() {
               type="search"
               placeholder="Cari makanan atau restoran..."
               value={pencarian}
-              onChange={(event) =>
-                setPencarian(event.target.value)
-              }
+              onChange={(event) => setPencarian(event.target.value)}
               aria-label="Cari data makanan"
             />
           </label>
@@ -255,7 +285,7 @@ function DashboardMakanan() {
                 <tr>
                   <th>Nama Makanan</th>
                   <th>Harga</th>
-                  <th>Jumlah</th>
+                  <th>Tersalurkan</th>
                   <th>Ketersediaan</th>
                   <th>Alamat</th>
                   <th>Aksi</th>
@@ -268,9 +298,10 @@ function DashboardMakanan() {
                     <tr key={item.id}>
                       <td>{item.nama}</td>
                       <td>{formatHarga(item.harga)}</td>
-                      <td>{item.jumlah}</td>
 
-                      {/* Jumlah makanan yang disediakan Mitra */}
+                      <td>{hitungTersalurkan(item)} porsi</td>
+
+                      {/* Tetap menampilkan jumlah awal dari Mitra */}
                       <td>{item.ketersediaan}</td>
 
                       <td>{item.alamat}</td>
