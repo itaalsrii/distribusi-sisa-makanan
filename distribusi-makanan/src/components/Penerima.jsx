@@ -6,6 +6,8 @@ const CLAIMS_KEY = "surplus_klaim";
 
 const MAKANAN_KEY = "surplus_makanan";
 
+const PEMBAYARAN_KEY = "surplus_pembayaran";
+
 const BANKS = ["BCA", "BNI", "BRI", "Mandiri"];
 
 const METODE_PENGAMBILAN = ["Ambil sendiri", "GoSend"];
@@ -20,6 +22,22 @@ const bacaData = (key) => {
     return [];
   }
 };
+
+// data pembayaran disimpan Mitra sebagai object: { "nama mitra": { virtualAccount, qris } }
+const bacaPembayaran = () => {
+  try {
+    const data = JSON.parse(localStorage.getItem(PEMBAYARAN_KEY) || "{}");
+    return data && typeof data === "object" && !Array.isArray(data)
+      ? data
+      : {};
+  } catch {
+    return {};
+  }
+};
+
+// kunci harus sama persis dengan kunciMitra() di KatalogMakanan
+const ambilPembayaranMitra = (semua, namaRestoran) =>
+  semua[String(namaRestoran || "").trim().toLowerCase()] || {};
 
 const simpanKlaim = (data) => {
   localStorage.setItem(CLAIMS_KEY, JSON.stringify(data));
@@ -36,6 +54,29 @@ const formatHarga = (harga) =>
   Number(harga) === 0
     ? "Gratis"
     : `Harga Rp ${Number(harga).toLocaleString("id-ID")}`;
+
+// pengambilan cuma ada dua: "Ambil sendiri" atau "GoSend"
+// klaim lama yang isinya "Tunai" dan sejenisnya dianggap "Ambil sendiri"
+const labelPengambilan = (klaim) => {
+  const nilai = klaim.metodePengambilan || klaim.metode || "";
+  return nilai === "GoSend" ? "GoSend" : "Ambil sendiri";
+};
+
+// pembayaran: "Gratis" atau nominal + lewat apa (QRIS / Virtual Account + bank)
+// klaim lama tanpa metode pembayaran cuma nampilin nominalnya
+const labelPembayaran = (klaim) => {
+  const harga = Number(klaim.harga || 0);
+  if (harga === 0) return "Gratis";
+  const total = harga * Number(klaim.jumlah || 1);
+  const nominal = `Rp ${total.toLocaleString("id-ID")}`;
+  if (klaim.metodePembayaran === "QRIS") return `${nominal} via QRIS`;
+  if (klaim.metodePembayaran === "Virtual Account") {
+    return `${nominal} via Virtual Account${
+      klaim.bankVA ? ` ${klaim.bankVA}` : ""
+    }`;
+  }
+  return nominal;
+};
 
 // samakan format nomor WA: 0812..., +62812..., 62812..., 812... dianggap nomor yang sama
 const normalisasiNomor = (nomor) => {
@@ -97,6 +138,7 @@ export default function Penerima() {
     bacaData(CLAIMS_KEY)
   );
   const [makananMitra, setMakananMitra] = useState(bacaMakananMitra);
+  const [pembayaranMitra, setPembayaranMitra] = useState(bacaPembayaran);
   const [makananDipilih, setMakananDipilih] = useState(null);
   const [modalKlaimTerbuka, setModalKlaimTerbuka] = useState(false);
   const [modalDaftarTerbuka, setModalDaftarTerbuka] = useState(false);
@@ -115,18 +157,29 @@ export default function Penerima() {
   const [nomorAktif, setNomorAktif] = useState("");
   const [pesanCek, setPesanCek] = useState("");
   const makananGratis = Number(makananDipilih?.harga) === 0;
+
+  // data pembayaran milik Mitra dari makanan yang sedang dipilih
+  const pembayaranDipilih = makananDipilih
+    ? ambilPembayaranMitra(pembayaranMitra, makananDipilih.restoran)
+    : {};
+  const vaDipilih = pembayaranDipilih.virtualAccount || {};
+  const qrisDipilih = pembayaranDipilih.qris || null;
+
   useEffect(() => {
     const muatData = () => {
       setDaftarKlaim(bacaData(CLAIMS_KEY));
       setMakananMitra(bacaMakananMitra());
+      setPembayaranMitra(bacaPembayaran());
     };
     window.addEventListener("storage", muatData);
     window.addEventListener("surplus-claims-updated", muatData);
     window.addEventListener("surplus-makanan-updated", muatData);
+    window.addEventListener("surplus-pembayaran-updated", muatData);
     return () => {
       window.removeEventListener("storage", muatData);
       window.removeEventListener("surplus-claims-updated", muatData);
       window.removeEventListener("surplus-makanan-updated", muatData);
+      window.removeEventListener("surplus-pembayaran-updated", muatData);
     };
   }, []);
   const sisaPorsi = (item) => {
@@ -161,6 +214,8 @@ export default function Penerima() {
     setPesanBukti("");
   };
   const klaimMakanan = (item) => {
+    // ambil data terbaru, siapa tahu Mitra baru saja mengatur pembayaran
+    setPembayaranMitra(bacaPembayaran());
     setMakananDipilih(item);
     setNamaLengkap("");
     setWhatsapp("");
@@ -239,13 +294,15 @@ export default function Penerima() {
       return;
     }
     const nomorVA =
-      pembayaran === "Virtual Account"
-        ? makananDipilih.virtualAccount?.[bankVA] || ""
-        : "";
+      pembayaran === "Virtual Account" ? vaDipilih[bankVA] || "" : "";
     if (pembayaran === "Virtual Account" && !nomorVA) {
       alert(
         `Nomor VA ${bankVA} untuk ${makananDipilih.restoran} belum diatur.`
       );
+      return;
+    }
+    if (pembayaran === "QRIS" && !qrisDipilih) {
+      alert(`QRIS untuk ${makananDipilih.restoran} belum diatur.`);
       return;
     }
     try {
@@ -342,6 +399,7 @@ export default function Penerima() {
   const lihatKlaimSaya = () => {
     setDaftarKlaim(bacaData(CLAIMS_KEY));
     setMakananMitra(bacaMakananMitra());
+    setPembayaranMitra(bacaPembayaran());
     setNomorCek("");
     setNomorAktif("");
     setPesanCek("");
@@ -355,6 +413,7 @@ export default function Penerima() {
       return;
     }
     setDaftarKlaim(bacaData(CLAIMS_KEY));
+    setPembayaranMitra(bacaPembayaran());
     setPesanCek("");
     setNomorAktif(nomor);
   };
@@ -648,22 +707,28 @@ export default function Penerima() {
               {!makananGratis && metodePembayaran === "QRIS" && (
                 <div className="pembayaran-box">
                   <h3>Pembayaran QRIS</h3>
-                  <p>
-                    Scan QRIS resmi milik Mitra, lalu upload bukti
-                    pembayaran.
-                  </p>
-                  <img
-                    src="/images/qris-merchant.png"
-                    alt="QRIS Mitra"
-                    className="qris-image"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                    }}
-                  />
-                  <p className="pembayaran-catatan">
-                    Pastikan QRIS dan nominal pembayaran benar sebelum
-                    melakukan transfer.
-                  </p>
+                  {qrisDipilih ? (
+                    <>
+                      <p>
+                        Scan QRIS milik {makananDipilih.restoran}, lalu
+                        upload bukti pembayaran.
+                      </p>
+                      <img
+                        src={qrisDipilih}
+                        alt="QRIS Mitra"
+                        className="qris-image"
+                      />
+                      <p className="pembayaran-catatan">
+                        Pastikan QRIS dan nominal pembayaran benar
+                        sebelum melakukan transfer.
+                      </p>
+                    </>
+                  ) : (
+                    <p className="pembayaran-error">
+                      QRIS belum didaftarkan oleh Mitra. Silakan pilih
+                      metode lain.
+                    </p>
+                  )}
                 </div>
               )}
               {!makananGratis &&
@@ -686,17 +751,13 @@ export default function Penerima() {
                     <label>Nomor Virtual Account Mitra</label>
                     <div className="va-display">
                       <span>
-                        {makananDipilih.virtualAccount?.[bankVA] ||
+                        {vaDipilih[bankVA] ||
                           `Nomor VA ${bankVA} belum didaftarkan oleh Mitra`}
                       </span>
-                      {makananDipilih.virtualAccount?.[bankVA] && (
+                      {vaDipilih[bankVA] && (
                         <button
                           type="button"
-                          onClick={() =>
-                            salinNomorVA(
-                              makananDipilih.virtualAccount[bankVA]
-                            )
-                          }
+                          onClick={() => salinNomorVA(vaDipilih[bankVA])}
                         >
                           Salin
                         </button>
@@ -830,81 +891,113 @@ export default function Penerima() {
                 </p>
                 {klaimSaya.length ? (
                   <div className="daftar-klaim-list">
-                    {[...klaimSaya].reverse().map((klaim) => (
-                      <article
-                        className="daftar-klaim-card"
-                        key={klaim.id}
-                      >
-                        <div className="daftar-klaim-header">
-                          <div>
-                            <h3>{klaim.makanan}</h3>
-                            <p className="klaim-restoran">
-                              ♧ {klaim.restoran}
-                            </p>
+                    {[...klaimSaya].reverse().map((klaim) => {
+                      const qrisKlaim = ambilPembayaranMitra(
+                        pembayaranMitra,
+                        klaim.restoran
+                      ).qris;
+                      return (
+                        <article
+                          className="daftar-klaim-card"
+                          key={klaim.id}
+                        >
+                          <div className="daftar-klaim-header">
+                            <div>
+                              <h3>{klaim.makanan}</h3>
+                              <p className="klaim-restoran">
+                                ♧ {klaim.restoran}
+                              </p>
+                            </div>
+                            <span className="klaim-status">
+                              {klaim.status}
+                            </span>
                           </div>
-                          <span className="klaim-status">
-                            {klaim.status}
-                          </span>
-                        </div>
-                        <div className="daftar-klaim-info">
-                          <span>Jumlah: {klaim.jumlah} porsi</span>
-                          <span>
-                            Pengambilan:{" "}
-                            {klaim.metodePengambilan ||
-                              klaim.metode ||
-                              "-"}
-                          </span>
-                          <span>
-                            Pembayaran:{" "}
-                            {klaim.metodePembayaran ||
-                              (Number(klaim.harga) === 0
-                                ? "Gratis"
-                                : "-")}
-                          </span>
-                        </div>
-                        <div className="klaim-detail-tambahan">
-                          <p>Nama: {klaim.nama}</p>
-                          <p>WhatsApp: {klaim.whatsapp}</p>
-                          <p>
-                            Alamat Penerima:{" "}
-                            {klaim.alamatPenerima || "-"}
-                          </p>
-                          <p>Alamat Restoran: {klaim.alamat || "-"}</p>
-                          {klaim.bankVA && (
-                            <>
-                              <p>Bank: {klaim.bankVA}</p>
-                              <p>Nomor VA: {klaim.nomorVA || "-"}</p>
-                            </>
-                          )}
-                          <p>
-                            Status pembayaran:{" "}
-                            {klaim.statusPembayaran || "-"}
-                          </p>
-                          {klaim.namaFileBukti && (
-                            <p>File bukti: {klaim.namaFileBukti}</p>
-                          )}
-                          {klaim.buktiPembayaran && (
-                            <button
-                              type="button"
-                              className="lihat-bukti-link"
-                              onClick={() =>
-                                bukaBukti(klaim.buktiPembayaran)
-                              }
-                              style={{
-                                background: "none",
-                                border: "none",
-                                padding: 0,
-                                font: "inherit",
-                                cursor: "pointer",
-                                textDecoration: "underline",
-                              }}
-                            >
-                              Lihat bukti pembayaran
-                            </button>
-                          )}
-                        </div>
-                      </article>
-                    ))}
+                          <div className="daftar-klaim-info">
+                            <span>Jumlah: {klaim.jumlah} porsi</span>
+                            <span>
+                              Pengambilan: {labelPengambilan(klaim)}
+                            </span>
+                            <span>
+                              Pembayaran: {labelPembayaran(klaim)}
+                            </span>
+                          </div>
+                          <div className="klaim-detail-tambahan">
+                            <p>Nama: {klaim.nama}</p>
+                            <p>WhatsApp: {klaim.whatsapp}</p>
+                            <p>
+                              Alamat Penerima:{" "}
+                              {klaim.alamatPenerima || "-"}
+                            </p>
+                            <p>Alamat Restoran: {klaim.alamat || "-"}</p>
+                            {klaim.bankVA && (
+                              <>
+                                <p>Bank: {klaim.bankVA}</p>
+                                <p>Nomor VA: {klaim.nomorVA || "-"}</p>
+                                {klaim.nomorVA && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      salinNomorVA(klaim.nomorVA)
+                                    }
+                                    style={{
+                                      background: "none",
+                                      border: "none",
+                                      padding: 0,
+                                      font: "inherit",
+                                      cursor: "pointer",
+                                      textDecoration: "underline",
+                                      color: "inherit",
+                                    }}
+                                  >
+                                    Salin nomor VA
+                                  </button>
+                                )}
+                              </>
+                            )}
+                            {klaim.metodePembayaran === "QRIS" && (
+                              <div>
+                                <p>QRIS {klaim.restoran}:</p>
+                                {qrisKlaim ? (
+                                  <img
+                                    src={qrisKlaim}
+                                    alt={`QRIS ${klaim.restoran}`}
+                                    className="qris-image"
+                                  />
+                                ) : (
+                                  <p>QRIS belum didaftarkan oleh Mitra.</p>
+                                )}
+                              </div>
+                            )}
+                            <p>
+                              Status pembayaran:{" "}
+                              {klaim.statusPembayaran || "-"}
+                            </p>
+                            {klaim.namaFileBukti && (
+                              <p>File bukti: {klaim.namaFileBukti}</p>
+                            )}
+                            {klaim.buktiPembayaran && (
+                              <button
+                                type="button"
+                                className="lihat-bukti-link"
+                                onClick={() =>
+                                  bukaBukti(klaim.buktiPembayaran)
+                                }
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  padding: 0,
+                                  font: "inherit",
+                                  cursor: "pointer",
+                                  textDecoration: "underline",
+                                }}
+                              >
+                                Lihat bukti pembayaran
+                              </button>
+                            )}
+                          </div>
+                        </article>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="klaim-kosong">

@@ -3,9 +3,11 @@ import { colors } from '../theme';
 
 const KEY_MAKANAN = 'surplus_makanan';
 const KEY_KLAIM = 'surplus_klaim';
+const KEY_PEMBAYARAN = 'surplus_pembayaran';
 const MAKS_FOTO = 2 * 1024 * 1024; // 2MB
 const OPSI_KATEGORI = ['Makanan Berat', 'Makanan Ringan', 'Roti & Kue', 'Minuman', 'Lainnya'];
 const OPSI_JENIS = ['Gratis (100% Free)', 'Berbayar (Harga Murah)'];
+const BANKS = ['BCA', 'BNI', 'BRI', 'Mandiri'];
 
 function bacaList(key) {
   try {
@@ -16,8 +18,20 @@ function bacaList(key) {
   }
 }
 
+// data pembayaran disimpan sebagai object: { "nama mitra": { virtualAccount, qris } }
+function bacaObjek(key) {
+  try {
+    const data = JSON.parse(localStorage.getItem(key) || '{}');
+    return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
+  } catch {
+    return {};
+  }
+}
+
 const samaNama = (a, b) =>
   String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+
+const kunciMitra = (nama) => String(nama || '').trim().toLowerCase();
 
 // porsi yang sudah diklaim = semua klaim makanan ini yang tidak ditolak (rumus sama dengan halaman penerima)
 const hitungTerklaim = (klaim, idMakanan) =>
@@ -36,16 +50,24 @@ const formAwal = {
   deskripsi: ''
 };
 
+const vaAwal = { BCA: '', BNI: '', BRI: '', Mandiri: '' };
+
 export default function KatalogMakanan({ namaMitra }) {
   const [semuaMakanan, setSemuaMakanan] = useState(() => bacaList(KEY_MAKANAN));
   const [semuaKlaim, setSemuaKlaim] = useState(() => bacaList(KEY_KLAIM));
-  const [modal, setModal] = useState(null); // null | 'form' | 'hapus'
+  const [modal, setModal] = useState(null); // null | 'form' | 'hapus' | 'bayar'
   const [editId, setEditId] = useState(null); // null = tambah baru, angka = edit
   const [itemHapus, setItemHapus] = useState(null);
   const [form, setForm] = useState(formAwal);
   const [gambar, setGambar] = useState(null);
   const [inputKey, setInputKey] = useState(0); // buat reset input file
   const [error, setError] = useState('');
+
+  // state pengaturan pembayaran
+  const [vaForm, setVaForm] = useState(vaAwal);
+  const [qris, setQris] = useState(null);
+  const [qrisInputKey, setQrisInputKey] = useState(0);
+  const [errorBayar, setErrorBayar] = useState('');
 
   // klaim baru dari halaman penerima ikut mengubah sisa stok
   useEffect(() => {
@@ -101,10 +123,20 @@ export default function KatalogMakanan({ namaMitra }) {
     setModal('form');
   };
 
+  const bukaBayar = () => {
+    const tersimpan = bacaObjek(KEY_PEMBAYARAN)[kunciMitra(namaMitra)] || {};
+    setVaForm({ ...vaAwal, ...(tersimpan.virtualAccount || {}) });
+    setQris(tersimpan.qris || null);
+    setErrorBayar('');
+    setQrisInputKey((k) => k + 1);
+    setModal('bayar');
+  };
+
   const tutupModal = () => {
     setModal(null);
     setItemHapus(null);
     setError('');
+    setErrorBayar('');
   };
 
   const ubahField = (e) => {
@@ -131,6 +163,58 @@ export default function KatalogMakanan({ namaMitra }) {
       setError('');
     };
     reader.readAsDataURL(file);
+  };
+
+  const ubahVA = (bank, nilai) => {
+    setVaForm({ ...vaForm, [bank]: nilai });
+    setErrorBayar('');
+  };
+
+  const pilihQris = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setErrorBayar('File QRIS harus berupa gambar (JPG, PNG, dll).');
+      setQrisInputKey((k) => k + 1);
+      return;
+    }
+    if (file.size > MAKS_FOTO) {
+      setErrorBayar('Ukuran gambar QRIS maksimal 2MB.');
+      setQrisInputKey((k) => k + 1);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setQris(reader.result);
+      setErrorBayar('');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const simpanBayar = (e) => {
+    e.preventDefault();
+
+    // nomor VA boleh kosong, tapi kalau diisi harus angka saja (8-20 digit)
+    const bersih = {};
+    for (const bank of BANKS) {
+      const nilai = String(vaForm[bank] || '').replace(/\s/g, '');
+      if (nilai && !/^[0-9]{8,20}$/.test(nilai)) {
+        setErrorBayar(`Nomor VA ${bank} harus berupa angka 8 sampai 20 digit.`);
+        return;
+      }
+      bersih[bank] = nilai;
+    }
+
+    try {
+      // baca ulang dulu supaya tidak menimpa data Mitra lain / tab lain
+      const semua = bacaObjek(KEY_PEMBAYARAN);
+      semua[kunciMitra(namaMitra)] = { virtualAccount: bersih, qris: qris };
+      localStorage.setItem(KEY_PEMBAYARAN, JSON.stringify(semua));
+      window.dispatchEvent(new Event('surplus-pembayaran-updated'));
+      tutupModal();
+    } catch {
+      setErrorBayar('Gagal menyimpan, penyimpanan browser penuh. Coba pakai gambar QRIS yang lebih kecil.');
+    }
   };
 
   const simpan = (e) => {
@@ -196,7 +280,8 @@ export default function KatalogMakanan({ namaMitra }) {
     alignItems: 'center',
     gap: '20px',
     backgroundColor: colors.surface,
-    padding: '28px 60px'
+    padding: '28px 60px',
+    flexWrap: 'wrap'
   };
 
   const sectionStyle = { padding: '32px 60px 40px' };
@@ -306,12 +391,30 @@ export default function KatalogMakanan({ namaMitra }) {
 
   const penuh = { gridColumn: '1 / -1' };
 
+  const tombolBatal = {
+    backgroundColor: '#6b6b70',
+    color: colors.text,
+    border: 'none',
+    borderRadius: '8px',
+    padding: '10px 26px',
+    fontSize: '0.95rem',
+    cursor: 'pointer'
+  };
+
   const terklaimSaatEdit = editId !== null ? hitungTerklaim(semuaKlaim, editId) : 0;
 
   const iconTombolTambah = (
     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
       strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+
+  const iconTombolBayar = (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="2" y="5" width="20" height="14" rx="2" />
+      <path d="M2 10h20" />
     </svg>
   );
 
@@ -331,23 +434,40 @@ export default function KatalogMakanan({ namaMitra }) {
             Kelola stok, harga, foto, atau dokumen makanan yang dipublikasikan
           </p>
         </div>
-        <button
-          type="button"
-          onClick={bukaTambah}
-          style={{
-            ...tombolKecil(colors.primary, true),
-            color: colors.text,
-            marginLeft: 'auto',
-            padding: '12px 22px',
-            fontSize: '0.95rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}
-        >
-          {iconTombolTambah}
-          Tambah Makanan
-        </button>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={bukaBayar}
+            style={{
+              ...tombolKecil(colors.muted, false),
+              color: colors.text,
+              padding: '12px 22px',
+              fontSize: '0.95rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            {iconTombolBayar}
+            Pengaturan Pembayaran
+          </button>
+          <button
+            type="button"
+            onClick={bukaTambah}
+            style={{
+              ...tombolKecil(colors.primary, true),
+              color: colors.text,
+              padding: '12px 22px',
+              fontSize: '0.95rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            {iconTombolTambah}
+            Tambah Makanan
+          </button>
+        </div>
       </div>
 
       {/* daftar kartu makanan */}
@@ -553,23 +673,103 @@ export default function KatalogMakanan({ namaMitra }) {
             )}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '28px' }}>
-              <button
-                type="button"
-                onClick={tutupModal}
-                style={{
-                  backgroundColor: '#6b6b70',
-                  color: colors.text,
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '10px 26px',
-                  fontSize: '0.95rem',
-                  cursor: 'pointer'
-                }}
-              >
+              <button type="button" onClick={tutupModal} style={tombolBatal}>
                 Batal
               </button>
               <button type="submit" style={{ ...tombolKecil(colors.warning, true), padding: '10px 22px' }}>
                 {editId !== null ? 'Simpan Perubahan' : 'Tambah Makanan'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* popup pengaturan pembayaran */}
+      {modal === 'bayar' && (
+        <div style={overlayStyle}>
+          <form style={{ ...modalStyle, maxWidth: '620px' }} onSubmit={simpanBayar}>
+            <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Pengaturan Pembayaran</h2>
+            <p style={{ margin: '4px 0 24px', color: colors.muted, lineHeight: 1.5 }}>
+              Dipakai penerima saat membayar makanan berbayar dari {namaMitra}. Cukup diisi sekali,
+              berlaku untuk semua makanan Anda.
+            </p>
+
+            <div style={formGrid}>
+              <div style={penuh}>
+                <div style={{ fontSize: '1.05rem', fontWeight: 700 }}>Nomor Virtual Account</div>
+                <div style={{ fontSize: '0.85rem', color: colors.muted, marginTop: '2px' }}>
+                  Kosongkan bank yang tidak Anda punya. Hanya angka.
+                </div>
+              </div>
+
+              {BANKS.map((bank) => (
+                <div key={bank}>
+                  <label style={labelStyle}>{bank}</label>
+                  <input
+                    style={inputStyle}
+                    inputMode="numeric"
+                    value={vaForm[bank]}
+                    onChange={(e) => ubahVA(bank, e.target.value)}
+                    placeholder={`Nomor VA ${bank}`}
+                  />
+                </div>
+              ))}
+
+              <div style={{ ...penuh, marginTop: '4px' }}>
+                <div style={{ fontSize: '1.05rem', fontWeight: 700 }}>Gambar QRIS</div>
+                <div style={{ fontSize: '0.85rem', color: colors.muted, marginTop: '2px' }}>
+                  Upload gambar QRIS merchant Anda (maks 2MB).
+                </div>
+              </div>
+
+              <div style={penuh}>
+                <input
+                  key={qrisInputKey}
+                  style={inputStyle}
+                  type="file"
+                  accept="image/*"
+                  onChange={pilihQris}
+                />
+                {qris && (
+                  <div style={{ marginTop: '12px' }}>
+                    <img
+                      src={qris}
+                      alt="Preview QRIS"
+                      style={{
+                        maxWidth: '220px',
+                        maxHeight: '220px',
+                        objectFit: 'contain',
+                        backgroundColor: '#fff',
+                        borderRadius: '12px',
+                        padding: '8px',
+                        display: 'block'
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQris(null);
+                        setQrisInputKey((k) => k + 1);
+                      }}
+                      style={{ ...tombolKecil(colors.primary, false), marginTop: '10px' }}
+                    >
+                      Hapus QRIS
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {errorBayar && (
+              <p style={{ color: colors.primary, margin: '18px 0 0', fontSize: '0.9rem' }}>{errorBayar}</p>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '28px' }}>
+              <button type="button" onClick={tutupModal} style={tombolBatal}>
+                Batal
+              </button>
+              <button type="submit" style={{ ...tombolKecil(colors.warning, true), padding: '10px 22px' }}>
+                Simpan Pengaturan
               </button>
             </div>
           </form>
@@ -607,19 +807,7 @@ export default function KatalogMakanan({ namaMitra }) {
               katalog makanan.
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', marginTop: '26px' }}>
-              <button
-                type="button"
-                onClick={tutupModal}
-                style={{
-                  backgroundColor: '#6b6b70',
-                  color: colors.text,
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '10px 26px',
-                  fontSize: '0.95rem',
-                  cursor: 'pointer'
-                }}
-              >
+              <button type="button" onClick={tutupModal} style={tombolBatal}>
                 Batal
               </button>
               <button
