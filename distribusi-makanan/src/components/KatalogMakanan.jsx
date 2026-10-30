@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { colors } from '../theme';
 
 const KEY_MAKANAN = 'surplus_makanan';
+const KEY_KLAIM = 'surplus_klaim';
 const MAKS_FOTO = 2 * 1024 * 1024; // 2MB
 const OPSI_KATEGORI = ['Makanan Berat', 'Makanan Ringan', 'Roti & Kue', 'Minuman', 'Lainnya'];
 const OPSI_JENIS = ['Gratis (100% Free)', 'Berbayar (Harga Murah)'];
 
-function bacaMakanan() {
+function bacaList(key) {
   try {
-    const data = JSON.parse(localStorage.getItem(KEY_MAKANAN) || '[]');
+    const data = JSON.parse(localStorage.getItem(key) || '[]');
     return Array.isArray(data) ? data : [];
   } catch {
     return [];
@@ -17,6 +18,12 @@ function bacaMakanan() {
 
 const samaNama = (a, b) =>
   String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+
+// porsi yang sudah diklaim = semua klaim makanan ini yang tidak ditolak (rumus sama dengan halaman penerima)
+const hitungTerklaim = (klaim, idMakanan) =>
+  klaim
+    .filter((k) => k.idMakanan === idMakanan && k.status !== 'Ditolak')
+    .reduce((total, k) => total + Number(k.jumlah || 0), 0);
 
 const formAwal = {
   makanan: '',
@@ -30,7 +37,8 @@ const formAwal = {
 };
 
 export default function KatalogMakanan({ namaMitra }) {
-  const [semuaMakanan, setSemuaMakanan] = useState(bacaMakanan);
+  const [semuaMakanan, setSemuaMakanan] = useState(() => bacaList(KEY_MAKANAN));
+  const [semuaKlaim, setSemuaKlaim] = useState(() => bacaList(KEY_KLAIM));
   const [modal, setModal] = useState(null); // null | 'form' | 'hapus'
   const [editId, setEditId] = useState(null); // null = tambah baru, angka = edit
   const [itemHapus, setItemHapus] = useState(null);
@@ -38,6 +46,20 @@ export default function KatalogMakanan({ namaMitra }) {
   const [gambar, setGambar] = useState(null);
   const [inputKey, setInputKey] = useState(0); // buat reset input file
   const [error, setError] = useState('');
+
+  // klaim baru dari halaman penerima ikut mengubah sisa stok
+  useEffect(() => {
+    const muat = () => {
+      setSemuaKlaim(bacaList(KEY_KLAIM));
+      setSemuaMakanan(bacaList(KEY_MAKANAN));
+    };
+    window.addEventListener('storage', muat);
+    window.addEventListener('surplus-claims-updated', muat);
+    return () => {
+      window.removeEventListener('storage', muat);
+      window.removeEventListener('surplus-claims-updated', muat);
+    };
+  }, []);
 
   // tiap Mitra hanya lihat makanan miliknya, terbaru di atas
   const makananMitra = semuaMakanan
@@ -48,6 +70,7 @@ export default function KatalogMakanan({ namaMitra }) {
 
   const simpanKeStorage = (data) => {
     localStorage.setItem(KEY_MAKANAN, JSON.stringify(data));
+    window.dispatchEvent(new Event('surplus-makanan-updated'));
     setSemuaMakanan(data);
   };
 
@@ -126,6 +149,15 @@ export default function KatalogMakanan({ namaMitra }) {
       return;
     }
 
+    // jangan sampai total porsi lebih kecil dari yang sudah diklaim penerima
+    if (editId !== null) {
+      const terklaim = hitungTerklaim(bacaList(KEY_KLAIM), editId);
+      if (Number(form.porsi) < terklaim) {
+        setError(`Total porsi tidak boleh kurang dari ${terklaim}, karena sudah diklaim penerima.`);
+        return;
+      }
+    }
+
     const data = {
       restoran: namaMitra,
       makanan: form.makanan.trim(),
@@ -141,7 +173,7 @@ export default function KatalogMakanan({ namaMitra }) {
 
     try {
       // baca ulang dulu supaya tidak menimpa data dari tab lain
-      const terbaru = bacaMakanan();
+      const terbaru = bacaList(KEY_MAKANAN);
       if (editId !== null) {
         simpanKeStorage(terbaru.map((m) => (m.id === editId ? { ...m, ...data } : m)));
       } else {
@@ -154,7 +186,7 @@ export default function KatalogMakanan({ namaMitra }) {
   };
 
   const konfirmasiHapus = () => {
-    simpanKeStorage(bacaMakanan().filter((m) => m.id !== itemHapus.id));
+    simpanKeStorage(bacaList(KEY_MAKANAN).filter((m) => m.id !== itemHapus.id));
     tutupModal();
   };
 
@@ -274,6 +306,8 @@ export default function KatalogMakanan({ namaMitra }) {
 
   const penuh = { gridColumn: '1 / -1' };
 
+  const terklaimSaatEdit = editId !== null ? hitungTerklaim(semuaKlaim, editId) : 0;
+
   const iconTombolTambah = (
     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
       strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -327,56 +361,73 @@ export default function KatalogMakanan({ namaMitra }) {
           </div>
         ) : (
           <div style={gridStyle}>
-            {makananMitra.map((m) => (
-              <div key={m.id} style={cardStyle}>
-                {m.gambar ? (
-                  <img src={m.gambar} alt={m.makanan} style={fotoStyle} />
-                ) : (
-                  <div style={fotoKosongStyle}>Belum ada foto</div>
-                )}
+            {makananMitra.map((m) => {
+              const terklaim = hitungTerklaim(semuaKlaim, m.id);
+              const sisa = Math.max(0, Number(m.porsi || 0) - terklaim);
+              const habis = sisa === 0;
 
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginTop: '12px'
-                  }}
-                >
-                  {m.harga > 0 ? (
-                    <span style={badgeStyle(colors.warning)}>
-                      Rp {m.harga.toLocaleString('id-ID')}
-                    </span>
+              return (
+                <div key={m.id} style={cardStyle}>
+                  {m.gambar ? (
+                    <img
+                      src={m.gambar}
+                      alt={m.makanan}
+                      style={{ ...fotoStyle, opacity: habis ? 0.45 : 1 }}
+                    />
                   ) : (
-                    <span style={badgeStyle(colors.success)}>Gratis</span>
+                    <div style={fotoKosongStyle}>Belum ada foto</div>
                   )}
-                  <span style={{ fontSize: '0.85rem' }}>Stok: {m.porsi} Porsi</span>
-                </div>
 
-                <div style={{ fontSize: '1.3rem', fontWeight: 700, margin: '6px 0 2px' }}>
-                  {m.makanan}
-                </div>
-                <div style={{ fontSize: '0.9rem' }}>Batas Pengambilan: {m.batas}</div>
-
-                <div
-                  style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '14px' }}
-                >
-                  <button type="button" style={tombolKecil(colors.warning, true)} onClick={() => bukaEdit(m)}>
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    style={tombolKecil(colors.primary, false)}
-                    onClick={() => {
-                      setItemHapus(m);
-                      setModal('hapus');
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginTop: '12px'
                     }}
                   >
-                    Hapus
-                  </button>
+                    {m.harga > 0 ? (
+                      <span style={badgeStyle(colors.warning)}>
+                        Rp {m.harga.toLocaleString('id-ID')}
+                      </span>
+                    ) : (
+                      <span style={badgeStyle(colors.success)}>Gratis</span>
+                    )}
+                    {habis ? (
+                      <span style={badgeStyle(colors.primary)}>Habis</span>
+                    ) : (
+                      <span style={{ fontSize: '0.85rem' }}>Stok: {sisa} Porsi</span>
+                    )}
+                  </div>
+
+                  <div style={{ fontSize: '1.3rem', fontWeight: 700, margin: '6px 0 2px' }}>
+                    {m.makanan}
+                  </div>
+                  <div style={{ fontSize: '0.9rem' }}>Batas Pengambilan: {m.batas}</div>
+                  <div style={{ fontSize: '0.85rem', color: colors.muted, marginTop: '2px' }}>
+                    {terklaim} dari {m.porsi} porsi sudah diklaim
+                  </div>
+
+                  <div
+                    style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '14px' }}
+                  >
+                    <button type="button" style={tombolKecil(colors.warning, true)} onClick={() => bukaEdit(m)}>
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      style={tombolKecil(colors.primary, false)}
+                      onClick={() => {
+                        setItemHapus(m);
+                        setModal('hapus');
+                      }}
+                    >
+                      Hapus
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -425,7 +476,7 @@ export default function KatalogMakanan({ namaMitra }) {
               </div>
 
               <div>
-                <label style={labelStyle}>Jumlah Porsi</label>
+                <label style={labelStyle}>Total Porsi</label>
                 <input
                   style={inputStyle}
                   type="number"
@@ -435,6 +486,11 @@ export default function KatalogMakanan({ namaMitra }) {
                   onChange={ubahField}
                   placeholder="Contoh: 5"
                 />
+                {editId !== null && (
+                  <div style={{ marginTop: '6px', fontSize: '0.82rem', color: colors.muted }}>
+                    Sudah diklaim penerima: {terklaimSaatEdit} porsi
+                  </div>
+                )}
               </div>
 
               <div>
