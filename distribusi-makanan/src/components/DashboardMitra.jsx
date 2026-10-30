@@ -31,6 +31,9 @@ function bacaList(key) {
 const samaNama = (a, b) =>
   String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 
+const totalPorsi = (daftarKlaim) =>
+  daftarKlaim.reduce((total, k) => total + Number(k.jumlah || 0), 0);
+
 export default function DashboardMitra() {
   const [session] = useState(bacaSession);
   const [activePage, setActivePage] = useState('home');
@@ -49,25 +52,45 @@ export default function DashboardMitra() {
   const makananMitra = bacaList('surplus_makanan').filter((m) => samaNama(m.restoran, namaMitra));
   const klaimMitra = bacaList('surplus_klaim').filter((k) => samaNama(k.restoran, namaMitra));
 
-  const klaimSelesai = klaimMitra.filter((k) => k.status === 'Selesai');
-  const klaimBerjalan = klaimMitra.filter((k) => k.status !== 'Selesai');
+  // klaim yang ditolak nggak dihitung (porsinya balik ke stok)
+  const klaimAktif = klaimMitra.filter((k) => k.status !== 'Ditolak');
+  const klaimSelesai = klaimAktif.filter((k) => k.status === 'Selesai');
+  const klaimBerjalan = klaimAktif.filter((k) => k.status !== 'Selesai');
 
   const totalPendapatan = klaimSelesai.reduce(
     (total, k) => total + Number(k.harga || 0) * Number(k.jumlah || 1),
     0
   );
 
-  // makanan dianggap "disalurkan" kalau ada klaim Selesai dengan nama makanan yang sama
-  const daftarMakanan = makananMitra
-    .map((m) => ({
-      id: m.id,
-      nama: m.makanan,
-      porsi: m.porsi,
-      status: klaimSelesai.some((k) => samaNama(k.makanan, m.makanan)) ? 'disalurkan' : 'menunggu',
-      foto: m.gambar || null
-    }))
-    .reverse()
-    .slice(0, 5); // 5 makanan terbaru biar panel nggak kepanjangan
+  // panel Status Makanan: tiap makanan bisa punya 2 baris
+  // - porsi yang SUDAH disalurkan (klaim Selesai)
+  // - porsi yang SEDANG tersalurkan (klaim belum Selesai)
+  const daftarMakanan = [];
+  [...makananMitra].reverse().forEach((m) => {
+    const klaimMakanan = klaimAktif.filter((k) => k.idMakanan === m.id);
+    const porsiSelesai = totalPorsi(klaimMakanan.filter((k) => k.status === 'Selesai'));
+    const porsiBerjalan = totalPorsi(klaimMakanan.filter((k) => k.status !== 'Selesai'));
+
+    if (porsiBerjalan > 0) {
+      daftarMakanan.push({
+        id: `${m.id}-berjalan`,
+        nama: m.makanan,
+        porsi: porsiBerjalan,
+        status: 'menunggu',
+        foto: m.gambar || null
+      });
+    }
+    if (porsiSelesai > 0) {
+      daftarMakanan.push({
+        id: `${m.id}-selesai`,
+        nama: m.makanan,
+        porsi: porsiSelesai,
+        status: 'disalurkan',
+        foto: m.gambar || null
+      });
+    }
+  });
+  const daftarMakananTampil = daftarMakanan.slice(0, 6); // biar panel nggak kepanjangan
 
   const stats = [
     { icon: 'package', label: 'Makanan Dibagikan', value: `${makananMitra.length} Item`, color: '#94a3b8' },
@@ -144,7 +167,7 @@ export default function DashboardMitra() {
             </div>
 
             <div style={panelGrid}>
-              <StatusMakanan daftarMakanan={daftarMakanan} />
+              <StatusMakanan daftarMakanan={daftarMakananTampil} />
               <PanduanKelayakan />
             </div>
           </>
