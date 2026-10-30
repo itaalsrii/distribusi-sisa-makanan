@@ -7,7 +7,7 @@ import AdminProfile from "./AdminProfile";
 const CLAIMS_KEY = "surplus_klaim";
 const MAKANAN_KEY = "surplus_makanan";
 
-// Membaca data laporan dan makanan dari localStorage
+// Membaca data laporan dari localStorage
 const bacaLaporan = () => {
   try {
     const dataKlaim = JSON.parse(
@@ -25,7 +25,7 @@ const bacaLaporan = () => {
       : [];
 
     return dataKlaim.map((item, index) => {
-      // Mencocokkan makanan berdasarkan ID terlebih dahulu
+      // Mencocokkan makanan berdasarkan ID
       const makananMitra = makananList.find(
         (m) =>
           item.idMakanan != null &&
@@ -33,19 +33,31 @@ const bacaLaporan = () => {
           String(m.id) === String(item.idMakanan)
       ) || makananList.find(
         (m) =>
-          (m.makanan || m.nama) ===
-            (item.makanan || item.namaMakanan) &&
-          (m.alamat || "") === (item.alamat || "")
+          String(m.makanan || m.nama || "").toLowerCase() ===
+            String(item.makanan || item.namaMakanan || "").toLowerCase() &&
+          String(m.restoran || m.namaMitra || "").toLowerCase() ===
+            String(item.restoran || item.namaMitra || "").toLowerCase()
       );
 
-      // Jumlah makanan yang disediakan Mitra
+      // Mengambil nama Mitra dari data klaim atau data makanan
+      const namaMitra =
+        item.restoran ||
+        item.namaMitra ||
+        item.namaRestoran ||
+        makananMitra?.restoran ||
+        makananMitra?.namaMitra ||
+        makananMitra?.namaRestoran ||
+        "-";
+
+      // Jumlah awal makanan yang disediakan Mitra
       const jumlahTersedia = Number(
-        makananMitra?.porsi ?? makananMitra?.jumlah ?? 0
+        makananMitra?.porsi ??
+        makananMitra?.jumlah ??
+        0
       );
 
       // Menyesuaikan format harga
       const hargaAsli = item.harga;
-
       let harga = "Gratis";
 
       if (
@@ -63,13 +75,14 @@ const bacaLaporan = () => {
         ) {
           harga = hargaAsli;
         } else {
-          harga = `Rp ${hargaAsli}`;
+          harga = `Rp ${Number(hargaAsli).toLocaleString("id-ID")}`;
         }
       }
 
       return {
         id: item.id ?? `${item.idMakanan ?? "klaim"}-${index}`,
         penerima: item.nama || item.penerima || "-",
+        namaMitra,
         makanan: item.makanan || item.namaMakanan || "-",
         harga,
         jumlah: Number(item.jumlah) || 0,
@@ -89,7 +102,7 @@ function LaporanAdmin() {
 
   const location = useLocation();
 
-  // Memuat ulang laporan ketika data klaim atau makanan berubah
+  // Memuat ulang laporan ketika data berubah
   useEffect(() => {
     const muatLaporan = () => {
       setLaporan(bacaLaporan());
@@ -98,21 +111,17 @@ function LaporanAdmin() {
     window.addEventListener("storage", muatLaporan);
     window.addEventListener("surplus-claims-updated", muatLaporan);
     window.addEventListener("surplus-food-updated", muatLaporan);
+    window.addEventListener("surplus-makanan-updated", muatLaporan);
 
     return () => {
       window.removeEventListener("storage", muatLaporan);
-      window.removeEventListener(
-        "surplus-claims-updated",
-        muatLaporan
-      );
-      window.removeEventListener(
-        "surplus-food-updated",
-        muatLaporan
-      );
+      window.removeEventListener("surplus-claims-updated", muatLaporan);
+      window.removeEventListener("surplus-food-updated", muatLaporan);
+      window.removeEventListener("surplus-makanan-updated", muatLaporan);
     };
   }, []);
 
-  // Fitur pencarian laporan
+  // Pencarian berdasarkan nama penerima, Mitra, dan makanan
   const dataTersaring = useMemo(() => {
     const kata = pencarian.toLowerCase().trim();
 
@@ -121,6 +130,7 @@ function LaporanAdmin() {
     return laporan.filter((item) =>
       [
         item.penerima,
+        item.namaMitra,
         item.makanan,
         item.harga,
         String(item.jumlah),
@@ -141,6 +151,7 @@ function LaporanAdmin() {
 
     const header = [
       "Nama Penerima",
+      "Nama Mitra",
       "Nama Makanan",
       "Harga",
       "Jumlah Diklaim",
@@ -150,6 +161,7 @@ function LaporanAdmin() {
 
     const rows = dataTersaring.map((item) => [
       item.penerima,
+      item.namaMitra,
       item.makanan,
       item.harga,
       item.jumlah,
@@ -201,13 +213,36 @@ function LaporanAdmin() {
     { label: "Laporan", to: "/admin/laporan" },
   ];
 
+  function LogoSurplus() {
   return (
-    <div className="laporan-admin">
-      <header className="laporan-navbar">
-        <Link className="laporan-brand" to="/admin">
-          <span className="laporan-brand-logo" aria-hidden="true">
-            ♨
-          </span>
+    <svg viewBox="0 0 48 48" fill="none" aria-label="Logo Surplus">
+      <path
+        d="M17 7 C9 12 27 14 18 20 M29 7 C21 12 39 14 30 20 M23 4 C15 9 33 11 24 17"
+        stroke="white"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M7 31 C9 22 16 19 24 19 C32 19 39 22 41 31 Z"
+        fill="white"
+      />
+      <path
+        d="M5 34 H43 M12 38 H36"
+        stroke="white"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+  return (
+    <div className="users-page">
+      <header className="users-navbar">
+        <Link to="/admin" className="users-brand">
+          <div className="users-brand-icon">
+            <LogoSurplus />
+          </div>
           <span>Surplus</span>
         </Link>
 
@@ -277,7 +312,7 @@ function LaporanAdmin() {
 
             <input
               type="search"
-              placeholder="Search..."
+              placeholder="Cari laporan..."
               value={pencarian}
               onChange={(event) =>
                 setPencarian(event.target.value)
@@ -296,6 +331,7 @@ function LaporanAdmin() {
               <thead>
                 <tr>
                   <th>Nama Penerima</th>
+                  <th>Nama Mitra</th>
                   <th>Nama Makanan</th>
                   <th>Harga</th>
                   <th>Jumlah</th>
@@ -309,6 +345,7 @@ function LaporanAdmin() {
                   dataTersaring.map((item) => (
                     <tr key={item.id}>
                       <td>{item.penerima}</td>
+                      <td>{item.namaMitra}</td>
                       <td>{item.makanan}</td>
                       <td>{item.harga}</td>
                       <td>{item.jumlah}</td>
@@ -318,7 +355,7 @@ function LaporanAdmin() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="laporan-empty">
+                    <td colSpan="7" className="laporan-empty">
                       {laporan.length === 0
                         ? "Belum ada data klaim makanan."
                         : "Data laporan tidak ditemukan."}

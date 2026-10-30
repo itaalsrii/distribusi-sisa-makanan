@@ -1,5 +1,8 @@
+
 /* Laporan Admin - tema Surplus */
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 .laporan-admin {
   min-height: 100vh;
@@ -10,6 +13,7 @@
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Navbar */
 .laporan-navbar {
   min-height: 64px;
   padding: 10px 20px;
@@ -86,11 +90,13 @@
   font-size: 11px;
 }
 
+/* Konten utama */
 .laporan-main {
   flex: 1;
   padding: 18px 22px 24px;
 }
 
+/* Judul halaman */
 .laporan-heading {
   min-height: 70px;
   display: flex;
@@ -122,7 +128,9 @@
   stroke-linejoin: round;
 }
 
-.laporan-heading-copy { min-width: 0; }
+.laporan-heading-copy {
+  min-width: 0;
+}
 
 .laporan-heading h1 {
   margin: 0 0 4px;
@@ -136,6 +144,7 @@
   font-size: 13px;
 }
 
+/* Tombol ekspor */
 .laporan-export-actions {
   display: flex;
   align-items: center;
@@ -156,10 +165,19 @@
   cursor: pointer;
 }
 
-.laporan-export.excel { background: #397A53; }
-.laporan-export.pdf { background: #E52529; }
-.laporan-export:hover { filter: brightness(1.12); }
+.laporan-export.excel {
+  background: #397A53;
+}
 
+.laporan-export.pdf {
+  background: #E52529;
+}
+
+.laporan-export:hover {
+  filter: brightness(1.12);
+}
+
+/* Pencarian */
 .laporan-toolbar {
   display: flex;
   justify-content: flex-end;
@@ -177,7 +195,9 @@
   background: #29292C;
 }
 
-.laporan-search:focus-within { border-color: #E52529; }
+.laporan-search:focus-within {
+  border-color: #E52529;
+}
 
 .laporan-search-icon {
   width: 34px;
@@ -208,8 +228,11 @@
   font: 13px Arial, Helvetica, sans-serif;
 }
 
-.laporan-search input::placeholder { color: #B8B8BC; }
+.laporan-search input::placeholder {
+  color: #B8B8BC;
+}
 
+/* Tabel laporan */
 .laporan-table-panel {
   min-height: 200px;
   overflow: hidden;
@@ -225,7 +248,7 @@
 
 .laporan-table {
   width: 100%;
-  min-width: 620px;
+  min-width: 850px;
   border-collapse: collapse;
   table-layout: fixed;
   text-align: center;
@@ -254,14 +277,38 @@
 }
 
 .laporan-table th:last-child,
-.laporan-table td:last-child { border-right: 0; }
+.laporan-table td:last-child {
+  border-right: 0;
+}
 
-.laporan-table th:nth-child(1) { width: 18%; }
-.laporan-table th:nth-child(2) { width: 17%; }
-.laporan-table th:nth-child(3) { width: 17%; }
-.laporan-table th:nth-child(4) { width: 16%; }
-.laporan-table th:nth-child(5) { width: 16%; }
-.laporan-table th:nth-child(6) { width: 16%; }
+/* Pembagian lebar 7 kolom */
+.laporan-table th:nth-child(1) {
+  width: 15%;
+}
+
+.laporan-table th:nth-child(2) {
+  width: 15%;
+}
+
+.laporan-table th:nth-child(3) {
+  width: 15%;
+}
+
+.laporan-table th:nth-child(4) {
+  width: 10%;
+}
+
+.laporan-table th:nth-child(5) {
+  width: 10%;
+}
+
+.laporan-table th:nth-child(6) {
+  width: 15%;
+}
+
+.laporan-table th:nth-child(7) {
+  width: 20%;
+}
 
 .laporan-empty {
   padding: 25px !important;
@@ -269,6 +316,7 @@
   text-align: center;
 }
 
+/* Footer */
 .laporan-footer {
   padding: 18px 10px;
   background: #29292C;
@@ -278,6 +326,7 @@
   font-size: 12px;
 }
 
+/* Tampilan tablet dan HP */
 @media (max-width: 760px) {
   .laporan-navbar {
     flex-wrap: wrap;
@@ -294,10 +343,21 @@
     gap: 5px;
   }
 
-  .laporan-profile { margin-left: auto; }
-  .laporan-main { padding: 12px; }
-  .laporan-heading { flex-wrap: wrap; }
-  .laporan-heading h1 { font-size: 19px; }
+  .laporan-profile {
+    margin-left: auto;
+  }
+
+  .laporan-main {
+    padding: 12px;
+  }
+
+  .laporan-heading {
+    flex-wrap: wrap;
+  }
+
+  .laporan-heading h1 {
+    font-size: 19px;
+  }
 
   .laporan-export-actions {
     width: 100%;
@@ -306,7 +366,13 @@
   }
 }
 
+/* Tampilan cetak dan PDF */
 @media print {
+  @page {
+    size: landscape;
+    margin: 12mm;
+  }
+
   body,
   .laporan-admin {
     background: #FFF !important;
@@ -320,7 +386,9 @@
     display: none !important;
   }
 
-  .laporan-main { padding: 0; }
+  .laporan-main {
+    padding: 0;
+  }
 
   .laporan-heading,
   .laporan-table-panel {
@@ -335,10 +403,21 @@
     color: #000 !important;
   }
 
+  .laporan-table-scroll {
+    overflow: visible;
+  }
+
+  .laporan-table {
+    width: 100%;
+    min-width: 0;
+  }
+
   .laporan-table th,
   .laporan-table td {
     border: 1px solid #888 !important;
   }
 
-  .laporan-table th { background: #EEE !important; }
+  .laporan-table th {
+    background: #EEE !important;
+  }
 }

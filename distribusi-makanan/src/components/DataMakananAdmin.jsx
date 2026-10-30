@@ -220,13 +220,36 @@ function DashboardMakanan() {
     { label: "Laporan", to: "/admin/laporan" },
   ];
 
+  function LogoSurplus() {
   return (
-    <div className="makanan-dashboard">
-      <header className="makanan-navbar">
-        <Link className="makanan-brand" to="/admin">
-          <span className="makanan-brand-logo" aria-hidden="true">
-            ♨
-          </span>
+    <svg viewBox="0 0 48 48" fill="none" aria-label="Logo Surplus">
+      <path
+        d="M17 7 C9 12 27 14 18 20 M29 7 C21 12 39 14 30 20 M23 4 C15 9 33 11 24 17"
+        stroke="white"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M7 31 C9 22 16 19 24 19 C32 19 39 22 41 31 Z"
+        fill="white"
+      />
+      <path
+        d="M5 34 H43 M12 38 H36"
+        stroke="white"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+  return (
+    <div className="users-page">
+      <header className="users-navbar">
+        <Link to="/admin" className="users-brand">
+          <div className="users-brand-icon">
+            <LogoSurplus />
+          </div>
           <span>Surplus</span>
         </Link>
 
