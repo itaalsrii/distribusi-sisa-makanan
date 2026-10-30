@@ -37,6 +37,15 @@ const formatHarga = (harga) =>
     ? "Gratis"
     : `Harga Rp ${Number(harga).toLocaleString("id-ID")}`;
 
+// samakan format nomor WA: 0812..., +62812..., 62812..., 812... dianggap nomor yang sama
+const normalisasiNomor = (nomor) => {
+  const digit = String(nomor || "").replace(/\D/g, "");
+  if (!digit) return "";
+  if (digit.startsWith("62")) return `0${digit.slice(2)}`;
+  if (digit.startsWith("0")) return digit;
+  return `0${digit}`;
+};
+
 function LogoMakanan() {
   return (
     <svg viewBox="0 0 48 48" fill="none" aria-label="Logo Surplus">
@@ -101,6 +110,10 @@ export default function Penerima() {
   const [buktiPembayaran, setBuktiPembayaran] = useState(null);
   const [previewBukti, setPreviewBukti] = useState("");
   const [pesanBukti, setPesanBukti] = useState("");
+  // cek klaim pakai nomor WhatsApp
+  const [nomorCek, setNomorCek] = useState("");
+  const [nomorAktif, setNomorAktif] = useState("");
+  const [pesanCek, setPesanCek] = useState("");
   const makananGratis = Number(makananDipilih?.harga) === 0;
   useEffect(() => {
     const muatData = () => {
@@ -135,6 +148,12 @@ export default function Penerima() {
       (filter === "Berbayar" && Number(item.harga) > 0);
     return cocokCari && cocokFilter && sisaPorsi(item) > 0;
   });
+  // klaim yang ditampilkan di "Klaim saya": hanya yang nomor WA-nya sama dengan nomor yang dicek
+  const klaimSaya = nomorAktif
+    ? daftarKlaim.filter(
+        (k) => normalisasiNomor(k.whatsapp) === nomorAktif
+      )
+    : [];
   const resetPembayaran = () => {
     setBankVA("BCA");
     setBuktiPembayaran(null);
@@ -284,6 +303,10 @@ export default function Penerima() {
       simpanKlaim(semuaKlaim);
       setDaftarKlaim(semuaKlaim);
       setModalKlaimTerbuka(false);
+      // habis klaim, langsung tampilkan klaim milik nomor yang baru dipakai
+      setNomorAktif(normalisasiNomor(klaimBaru.whatsapp));
+      setNomorCek("");
+      setPesanCek("");
       setModalDaftarTerbuka(true);
       resetPembayaran();
     } catch (error) {
@@ -315,14 +338,40 @@ export default function Penerima() {
       alert("Gagal menyalin. Silakan salin nomor secara manual.");
     }
   };
+  // tiap buka "Klaim saya" selalu minta nomor WA lagi
   const lihatKlaimSaya = () => {
     setDaftarKlaim(bacaData(CLAIMS_KEY));
     setMakananMitra(bacaMakananMitra());
+    setNomorCek("");
+    setNomorAktif("");
+    setPesanCek("");
     setModalDaftarTerbuka(true);
+  };
+  const cekKlaim = (e) => {
+    e.preventDefault();
+    const nomor = normalisasiNomor(nomorCek);
+    if (nomor.length < 8) {
+      setPesanCek("Masukkan nomor WhatsApp yang valid.");
+      return;
+    }
+    setDaftarKlaim(bacaData(CLAIMS_KEY));
+    setPesanCek("");
+    setNomorAktif(nomor);
+  };
+  const gantiNomor = () => {
+    setNomorAktif("");
+    setNomorCek("");
+    setPesanCek("");
+  };
+  const tutupDaftar = () => {
+    setModalDaftarTerbuka(false);
+    setNomorAktif("");
+    setNomorCek("");
+    setPesanCek("");
   };
   const tutupSemuaModal = () => {
     setModalKlaimTerbuka(false);
-    setModalDaftarTerbuka(false);
+    tutupDaftar();
   };
   const tutupJikaLatar = (e, tutup) => {
     if (e.target === e.currentTarget) tutup();
@@ -703,9 +752,7 @@ export default function Penerima() {
       {modalDaftarTerbuka && (
         <div
           className="klaim-overlay"
-          onClick={(e) =>
-            tutupJikaLatar(e, () => setModalDaftarTerbuka(false))
-          }
+          onClick={(e) => tutupJikaLatar(e, tutupDaftar)}
         >
           <section
             className="daftar-klaim-modal"
@@ -716,7 +763,7 @@ export default function Penerima() {
             <button
               type="button"
               className="modal-close"
-              onClick={() => setModalDaftarTerbuka(false)}
+              onClick={tutupDaftar}
               aria-label="Tutup daftar klaim"
             >
               &times;
@@ -728,93 +775,155 @@ export default function Penerima() {
               <span className="daftar-klaim-icon">▣</span>
               Daftar Klaim Makanan Anda
             </h2>
-            {daftarKlaim.length ? (
-              <div className="daftar-klaim-list">
-                {[...daftarKlaim].reverse().map((klaim) => (
-                  <article
-                    className="daftar-klaim-card"
-                    key={klaim.id}
-                  >
-                    <div className="daftar-klaim-header">
-                      <div>
-                        <h3>{klaim.makanan}</h3>
-                        <p className="klaim-restoran">
-                          ♧ {klaim.restoran}
-                        </p>
-                      </div>
-                      <span className="klaim-status">
-                        {klaim.status}
-                      </span>
-                    </div>
-                    <div className="daftar-klaim-info">
-                      <span>Jumlah: {klaim.jumlah} porsi</span>
-                      <span>
-                        Pengambilan:{" "}
-                        {klaim.metodePengambilan || klaim.metode || "-"}
-                      </span>
-                      <span>
-                        Pembayaran:{" "}
-                        {klaim.metodePembayaran ||
-                          (Number(klaim.harga) === 0 ? "Gratis" : "-")}
-                      </span>
-                    </div>
-                    <div className="klaim-detail-tambahan">
-                      <p>Nama: {klaim.nama}</p>
-                      <p>WhatsApp: {klaim.whatsapp}</p>
-                      <p>
-                        Alamat Penerima: {klaim.alamatPenerima || "-"}
-                      </p>
-                      <p>Alamat Restoran: {klaim.alamat || "-"}</p>
-                      {klaim.bankVA && (
-                        <>
-                          <p>Bank: {klaim.bankVA}</p>
-                          <p>Nomor VA: {klaim.nomorVA || "-"}</p>
-                        </>
-                      )}
-                      <p>
-                        Status pembayaran:{" "}
-                        {klaim.statusPembayaran || "-"}
-                      </p>
-                      {klaim.namaFileBukti && (
-                        <p>File bukti: {klaim.namaFileBukti}</p>
-                      )}
-                      {klaim.buktiPembayaran && (
-                        <button
-                          type="button"
-                          className="lihat-bukti-link"
-                          onClick={() => bukaBukti(klaim.buktiPembayaran)}
-                          style={{
-                            background: "none",
-                            border: "none",
-                            padding: 0,
-                            font: "inherit",
-                            cursor: "pointer",
-                            textDecoration: "underline",
-                          }}
-                        >
-                          Lihat bukti pembayaran
-                        </button>
-                      )}
-                    </div>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <div className="klaim-kosong">
-                <p>Belum ada makanan yang diklaim.</p>
-                <button
-                  type="button"
-                  className="konfirmasi-btn"
-                  onClick={tutupSemuaModal}
-                >
-                  Cari makanan
+            {!nomorAktif ? (
+              <form onSubmit={cekKlaim} style={{ margin: "8px 0 12px" }}>
+                <p style={{ margin: "0 0 12px", opacity: 0.8 }}>
+                  Masukkan nomor WhatsApp yang Anda pakai saat klaim untuk
+                  melihat status klaim Anda.
+                </p>
+                <input
+                  type="tel"
+                  placeholder="cth: 081122334455"
+                  value={nomorCek}
+                  onChange={(e) => {
+                    setNomorCek(e.target.value);
+                    setPesanCek("");
+                  }}
+                  style={{
+                    width: "100%",
+                    boxSizing: "border-box",
+                    padding: "12px 14px",
+                    marginBottom: "12px",
+                    borderRadius: "10px",
+                    border: "1px solid #38383c",
+                    backgroundColor: "#16171a",
+                    color: "#fff",
+                    fontSize: "1rem",
+                  }}
+                />
+                {pesanCek && (
+                  <p className="pembayaran-error">{pesanCek}</p>
+                )}
+                <button type="submit" className="konfirmasi-btn">
+                  Cek klaim saya
                 </button>
-              </div>
+              </form>
+            ) : (
+              <>
+                <p style={{ margin: "0 0 12px", opacity: 0.8 }}>
+                  Klaim untuk nomor {nomorAktif}.{" "}
+                  <button
+                    type="button"
+                    onClick={gantiNomor}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      padding: 0,
+                      font: "inherit",
+                      cursor: "pointer",
+                      textDecoration: "underline",
+                      color: "inherit",
+                    }}
+                  >
+                    Ganti nomor
+                  </button>
+                </p>
+                {klaimSaya.length ? (
+                  <div className="daftar-klaim-list">
+                    {[...klaimSaya].reverse().map((klaim) => (
+                      <article
+                        className="daftar-klaim-card"
+                        key={klaim.id}
+                      >
+                        <div className="daftar-klaim-header">
+                          <div>
+                            <h3>{klaim.makanan}</h3>
+                            <p className="klaim-restoran">
+                              ♧ {klaim.restoran}
+                            </p>
+                          </div>
+                          <span className="klaim-status">
+                            {klaim.status}
+                          </span>
+                        </div>
+                        <div className="daftar-klaim-info">
+                          <span>Jumlah: {klaim.jumlah} porsi</span>
+                          <span>
+                            Pengambilan:{" "}
+                            {klaim.metodePengambilan ||
+                              klaim.metode ||
+                              "-"}
+                          </span>
+                          <span>
+                            Pembayaran:{" "}
+                            {klaim.metodePembayaran ||
+                              (Number(klaim.harga) === 0
+                                ? "Gratis"
+                                : "-")}
+                          </span>
+                        </div>
+                        <div className="klaim-detail-tambahan">
+                          <p>Nama: {klaim.nama}</p>
+                          <p>WhatsApp: {klaim.whatsapp}</p>
+                          <p>
+                            Alamat Penerima:{" "}
+                            {klaim.alamatPenerima || "-"}
+                          </p>
+                          <p>Alamat Restoran: {klaim.alamat || "-"}</p>
+                          {klaim.bankVA && (
+                            <>
+                              <p>Bank: {klaim.bankVA}</p>
+                              <p>Nomor VA: {klaim.nomorVA || "-"}</p>
+                            </>
+                          )}
+                          <p>
+                            Status pembayaran:{" "}
+                            {klaim.statusPembayaran || "-"}
+                          </p>
+                          {klaim.namaFileBukti && (
+                            <p>File bukti: {klaim.namaFileBukti}</p>
+                          )}
+                          {klaim.buktiPembayaran && (
+                            <button
+                              type="button"
+                              className="lihat-bukti-link"
+                              onClick={() =>
+                                bukaBukti(klaim.buktiPembayaran)
+                              }
+                              style={{
+                                background: "none",
+                                border: "none",
+                                padding: 0,
+                                font: "inherit",
+                                cursor: "pointer",
+                                textDecoration: "underline",
+                              }}
+                            >
+                              Lihat bukti pembayaran
+                            </button>
+                          )}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="klaim-kosong">
+                    <p>Belum ada klaim dengan nomor ini.</p>
+                    <button
+                      type="button"
+                      className="konfirmasi-btn"
+                      onClick={tutupSemuaModal}
+                    >
+                      Cari makanan
+                    </button>
+                  </div>
+                )}
+              </>
             )}
             <button
               type="button"
               className="tutup-daftar-btn"
-              onClick={() => setModalDaftarTerbuka(false)}
+              onClick={tutupDaftar}
             >
               Tutup
             </button>
