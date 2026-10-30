@@ -293,6 +293,20 @@ export default function Penerima() {
       );
     }
   };
+  // Chrome nge-blok link data: di tab baru, jadi diubah ke blob dulu baru dibuka
+  const bukaBukti = (dataUrl) => {
+    try {
+      const [header, isi] = dataUrl.split(",");
+      const tipe = header.match(/data:(.*?);base64/)[1];
+      const biner = atob(isi);
+      const bytes = new Uint8Array(biner.length);
+      for (let i = 0; i < biner.length; i++) bytes[i] = biner.charCodeAt(i);
+      const url = URL.createObjectURL(new Blob([bytes], { type: tipe }));
+      window.open(url, "_blank");
+    } catch {
+      alert("Gagal membuka bukti pembayaran.");
+    }
+  };
   const salinNomorVA = async (nomor) => {
     try {
       await navigator.clipboard.writeText(nomor);
@@ -765,14 +779,21 @@ export default function Penerima() {
                         <p>File bukti: {klaim.namaFileBukti}</p>
                       )}
                       {klaim.buktiPembayaran && (
-                        <a
-                          href={klaim.buktiPembayaran}
-                          target="_blank"
-                          rel="noreferrer"
+                        <button
+                          type="button"
                           className="lihat-bukti-link"
+                          onClick={() => bukaBukti(klaim.buktiPembayaran)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            padding: 0,
+                            font: "inherit",
+                            cursor: "pointer",
+                            textDecoration: "underline",
+                          }}
                         >
                           Lihat bukti pembayaran
-                        </a>
+                        </button>
                       )}
                     </div>
                   </article>

@@ -8,7 +8,14 @@ const warnaStatus = {
   'Menunggu Konfirmasi': colors.warning,
   Diproses: colors.warning,
   'Siap Diambil/Dikirim': '#60a5fa',
-  Selesai: colors.success
+  Selesai: colors.success,
+  Ditolak: colors.primary
+};
+
+const warnaPembayaran = {
+  'Menunggu Verifikasi': colors.warning,
+  Terverifikasi: colors.success,
+  Ditolak: colors.primary
 };
 
 function bacaKlaim() {
@@ -36,8 +43,14 @@ function formatHarga(klaim) {
   return total === 0 ? 'Gratis' : `Rp ${total.toLocaleString('id-ID')}`;
 }
 
+// klaim lama (sebelum Penerima dipisah) masih pakai field "metode"
+const metodeAmbil = (k) => k.metodePengambilan || k.metode || '-';
+const metodeBayar = (k) => k.metodePembayaran || (Number(k.harga || 0) === 0 ? 'Gratis' : k.metode || '-');
+const perluVerifikasi = (k) => ['QRIS', 'Virtual Account'].includes(metodeBayar(k));
+
 export default function PengajuanPenerima({ namaMitra }) {
   const [semuaKlaim, setSemuaKlaim] = useState(bacaKlaim);
+  const [buktiTerbuka, setBuktiTerbuka] = useState(null); // klaim yang buktinya lagi dilihat
 
   // update otomatis kalau tab lain (halaman penerima) menambah klaim baru
   useEffect(() => {
@@ -53,13 +66,28 @@ export default function PengajuanPenerima({ namaMitra }) {
     .filter((k) => samaNama(k.restoran, namaMitra))
     .reverse();
 
-  const ubahStatus = (id, statusBaru) => {
-    // baca ulang dulu supaya tidak menimpa klaim baru dari tab lain
-    const terbaru = bacaKlaim().map((k) => (k.id === id ? { ...k, status: statusBaru } : k));
+  // simpan perubahan satu klaim. Baca ulang dulu supaya tidak menimpa klaim baru dari tab lain
+  const ubahKlaim = (id, perubahan) => {
+    const terbaru = bacaKlaim().map((k) => (k.id === id ? { ...k, ...perubahan } : k));
     localStorage.setItem(KEY_KLAIM, JSON.stringify(terbaru));
+    window.dispatchEvent(new Event('surplus-claims-updated'));
     setSemuaKlaim(terbaru);
   };
 
+  const ubahStatus = (id, statusBaru) => ubahKlaim(id, { status: statusBaru });
+
+  const verifikasiPembayaran = (id) => ubahKlaim(id, { statusPembayaran: 'Terverifikasi' });
+
+  // tolak pembayaran = klaim ikut ditolak, jadi stok porsinya otomatis balik di halaman penerima
+  const tolakPembayaran = (klaim) => {
+    const yakin = window.confirm(
+      `Tolak pembayaran dari ${klaim.nama}? Klaim akan dibatalkan dan stok porsi dikembalikan.`
+    );
+    if (!yakin) return;
+    ubahKlaim(klaim.id, { statusPembayaran: 'Ditolak', status: 'Ditolak' });
+  };
+
+  // ---------- style ----------
   const bannerStyle = {
     display: 'flex',
     alignItems: 'center',
@@ -80,15 +108,15 @@ export default function PengajuanPenerima({ namaMitra }) {
 
   const tableStyle = {
     width: '100%',
-    minWidth: '940px',
+    minWidth: '1280px',
     borderCollapse: 'collapse',
     tableLayout: 'fixed'
   };
 
   const thStyle = {
     textAlign: 'left',
-    padding: '24px 14px',
-    fontSize: '0.95rem',
+    padding: '24px 12px',
+    fontSize: '0.9rem',
     fontWeight: 700,
     letterSpacing: '0.5px',
     textTransform: 'uppercase',
@@ -96,25 +124,75 @@ export default function PengajuanPenerima({ namaMitra }) {
   };
 
   const tdStyle = {
-    padding: '26px 14px',
-    fontSize: '1rem',
-    verticalAlign: 'middle',
+    padding: '22px 12px',
+    fontSize: '0.95rem',
+    verticalAlign: 'top',
     lineHeight: 1.5,
-    borderBottom: `1px solid ${colors.border}`
+    borderBottom: `1px solid ${colors.border}`,
+    wordBreak: 'break-word'
   };
+
+  const mutedKecil = { color: colors.muted, fontSize: '0.88rem' };
 
   const selectStyle = (status) => ({
     width: '100%',
-    maxWidth: '230px',
+    maxWidth: '210px',
     backgroundColor: colors.surfaceLight,
     color: colors.text,
     border: `1.5px solid ${warnaStatus[status] || colors.border}`,
     borderRadius: '10px',
-    padding: '11px 14px',
-    fontSize: '0.95rem',
+    padding: '10px 12px',
+    fontSize: '0.92rem',
     cursor: 'pointer',
     colorScheme: 'dark'
   });
+
+  const pillStyle = (warna) => ({
+    display: 'inline-block',
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    color: warna,
+    border: `1px solid ${warna}`,
+    borderRadius: '6px',
+    padding: '2px 8px',
+    marginTop: '6px'
+  });
+
+  const tombolKecil = (warna, isi) => ({
+    backgroundColor: isi ? warna : 'transparent',
+    color: isi ? '#fff' : warna,
+    border: `1.5px solid ${warna}`,
+    borderRadius: '8px',
+    padding: '6px 12px',
+    fontSize: '0.85rem',
+    fontWeight: 600,
+    cursor: 'pointer'
+  });
+
+  const overlayStyle = {
+    position: 'fixed',
+    inset: 0,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '20px',
+    zIndex: 1000
+  };
+
+  const modalStyle = {
+    backgroundColor: colors.bg,
+    border: `1px solid ${colors.border}`,
+    borderRadius: '20px',
+    padding: '28px',
+    width: '100%',
+    maxWidth: '640px',
+    maxHeight: '92vh',
+    overflowY: 'auto',
+    boxSizing: 'border-box'
+  };
+
+  const buktiAdalahPdf = buktiTerbuka && String(buktiTerbuka.buktiPembayaran).startsWith('data:application/pdf');
 
   return (
     <div>
@@ -140,7 +218,7 @@ export default function PengajuanPenerima({ namaMitra }) {
             Kelola Pengajuan Penerima
           </h1>
           <p style={{ margin: '4px 0 0', color: colors.muted, fontSize: '1.1rem' }}>
-            Kelola pengajuan dan status penyerahan makanan
+            Kelola pengajuan, verifikasi pembayaran, dan status penyerahan makanan
           </p>
         </div>
       </div>
@@ -149,19 +227,23 @@ export default function PengajuanPenerima({ namaMitra }) {
         <div style={tableCard}>
           <table style={tableStyle}>
             <colgroup>
+              <col style={{ width: '9%' }} />
               <col style={{ width: '13%' }} />
-              <col style={{ width: '22%' }} />
-              <col style={{ width: '20%' }} />
-              <col style={{ width: '16%' }} />
-              <col style={{ width: '11%' }} />
-              <col style={{ width: '18%' }} />
+              <col style={{ width: '13%' }} />
+              <col style={{ width: '15%' }} />
+              <col style={{ width: '9%' }} />
+              <col style={{ width: '19%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '14%' }} />
             </colgroup>
             <thead>
               <tr>
                 <th style={thStyle}>Hari & Tanggal</th>
                 <th style={thStyle}>Makanan</th>
                 <th style={thStyle}>Penerima</th>
-                <th style={thStyle}>Opsi Ambil/Kirim</th>
+                <th style={thStyle}>Alamat</th>
+                <th style={thStyle}>Pengambilan</th>
+                <th style={thStyle}>Pembayaran</th>
                 <th style={thStyle}>Harga</th>
                 <th style={thStyle}>Status</th>
               </tr>
@@ -170,7 +252,7 @@ export default function PengajuanPenerima({ namaMitra }) {
               {klaimMitra.length === 0 && (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={8}
                     style={{
                       ...tdStyle,
                       borderBottom: 'none',
@@ -190,6 +272,11 @@ export default function PengajuanPenerima({ namaMitra }) {
               )}
 
               {klaimMitra.map((klaim) => {
+                const ditolak = klaim.status === 'Ditolak';
+                const bayar = metodeBayar(klaim);
+                const adaVerifikasi = perluVerifikasi(klaim);
+                const statusBayar = klaim.statusPembayaran || 'Menunggu Verifikasi';
+
                 // kalau status saat ini belum ada di daftar (misal "Menunggu Konfirmasi"), tampilkan juga
                 const opsi = OPSI_STATUS.includes(klaim.status)
                   ? OPSI_STATUS
@@ -198,30 +285,82 @@ export default function PengajuanPenerima({ namaMitra }) {
                 return (
                   <tr key={klaim.id}>
                     <td style={tdStyle}>{formatTanggal(klaim.id)}</td>
+
                     <td style={tdStyle}>
                       {klaim.makanan}
-                      <div style={{ color: colors.muted, fontSize: '0.9rem' }}>
-                        ({klaim.jumlah} porsi)
-                      </div>
+                      <div style={mutedKecil}>({klaim.jumlah} porsi)</div>
                     </td>
+
                     <td style={tdStyle}>
                       <div>{klaim.nama}</div>
-                      <div style={{ color: colors.muted, fontSize: '0.9rem' }}>{klaim.whatsapp}</div>
+                      <div style={mutedKecil}>{klaim.whatsapp}</div>
                     </td>
-                    <td style={tdStyle}>{klaim.metode}</td>
-                    <td style={tdStyle}>{formatHarga(klaim)}</td>
+
+                    <td style={tdStyle}>{klaim.alamatPenerima || '-'}</td>
+
+                    <td style={tdStyle}>{metodeAmbil(klaim)}</td>
+
                     <td style={tdStyle}>
-                      <select
-                        style={selectStyle(klaim.status)}
-                        value={klaim.status}
-                        onChange={(e) => ubahStatus(klaim.id, e.target.value)}
-                      >
-                        {opsi.map((status) => (
-                          <option key={status} value={status}>
-                            {status}
-                          </option>
-                        ))}
-                      </select>
+                      <div>{bayar}</div>
+                      {klaim.bankVA && <div style={mutedKecil}>Bank {klaim.bankVA}</div>}
+
+                      {adaVerifikasi && (
+                        <>
+                          <span style={pillStyle(warnaPembayaran[statusBayar] || colors.muted)}>
+                            {statusBayar}
+                          </span>
+
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+                            {klaim.buktiPembayaran && (
+                              <button
+                                type="button"
+                                style={tombolKecil('#60a5fa', false)}
+                                onClick={() => setBuktiTerbuka(klaim)}
+                              >
+                                Lihat Bukti
+                              </button>
+                            )}
+                            {statusBayar === 'Menunggu Verifikasi' && (
+                              <>
+                                <button
+                                  type="button"
+                                  style={tombolKecil(colors.success, true)}
+                                  onClick={() => verifikasiPembayaran(klaim.id)}
+                                >
+                                  Verifikasi
+                                </button>
+                                <button
+                                  type="button"
+                                  style={tombolKecil(colors.primary, false)}
+                                  onClick={() => tolakPembayaran(klaim)}
+                                >
+                                  Tolak
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </td>
+
+                    <td style={tdStyle}>{formatHarga(klaim)}</td>
+
+                    <td style={tdStyle}>
+                      {ditolak ? (
+                        <span style={{ ...pillStyle(colors.primary), marginTop: 0 }}>Ditolak</span>
+                      ) : (
+                        <select
+                          style={selectStyle(klaim.status)}
+                          value={klaim.status}
+                          onChange={(e) => ubahStatus(klaim.id, e.target.value)}
+                        >
+                          {opsi.map((status) => (
+                            <option key={status} value={status}>
+                              {status}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </td>
                   </tr>
                 );
@@ -230,6 +369,60 @@ export default function PengajuanPenerima({ namaMitra }) {
           </table>
         </div>
       </div>
+
+      {/* popup lihat bukti pembayaran */}
+      {buktiTerbuka && (
+        <div
+          style={overlayStyle}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setBuktiTerbuka(null);
+          }}
+        >
+          <div style={modalStyle}>
+            <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 700 }}>Bukti Pembayaran</h2>
+            <p style={{ margin: '4px 0 18px', color: colors.muted }}>
+              {buktiTerbuka.nama} · {buktiTerbuka.makanan} ({buktiTerbuka.jumlah} porsi) ·{' '}
+              {formatHarga(buktiTerbuka)}
+            </p>
+
+            {buktiAdalahPdf ? (
+              <iframe
+                title="Bukti pembayaran"
+                src={buktiTerbuka.buktiPembayaran}
+                style={{ width: '100%', height: '60vh', border: 'none', borderRadius: '12px', backgroundColor: '#fff' }}
+              />
+            ) : (
+              <img
+                src={buktiTerbuka.buktiPembayaran}
+                alt="Bukti pembayaran"
+                style={{ width: '100%', maxHeight: '60vh', objectFit: 'contain', borderRadius: '12px', backgroundColor: colors.surface }}
+              />
+            )}
+
+            {buktiTerbuka.namaFileBukti && (
+              <p style={{ ...mutedKecil, margin: '10px 0 0' }}>File: {buktiTerbuka.namaFileBukti}</p>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+              <button
+                type="button"
+                onClick={() => setBuktiTerbuka(null)}
+                style={{
+                  backgroundColor: '#6b6b70',
+                  color: colors.text,
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '10px 26px',
+                  fontSize: '0.95rem',
+                  cursor: 'pointer'
+                }}
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
