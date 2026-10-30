@@ -7,6 +7,7 @@ import StatusMakanan from './StatusMakanan';
 import PanduanKelayakan from './PanduanKelayakan';
 import PengajuanPenerima from './PengajuanPenerima';
 import KatalogMakanan from './KatalogMakanan';
+import LaporanMitra from './LaporanMitra';
 import { colors } from '../theme';
 
 // baca data Mitra yang lagi login (disimpan oleh Login.jsx)
@@ -45,8 +46,9 @@ export default function DashboardMitra() {
 
   const namaMitra = session.namaUsaha || session.nama;
 
-  // halaman Pengajuan dan Katalog dibuat selebar layar
-  const selebarLayar = activePage === 'pengajuan' || activePage === 'makanan';
+  // halaman Pengajuan, Katalog, dan Laporan dibuat selebar layar
+  const selebarLayar =
+    activePage === 'pengajuan' || activePage === 'makanan' || activePage === 'laporan';
 
   // ---------- data asli dari localStorage (dibaca ulang tiap pindah menu) ----------
   const makananMitra = bacaList('surplus_makanan').filter((m) => samaNama(m.restoran, namaMitra));
@@ -174,7 +176,7 @@ export default function DashboardMitra() {
         )}
         {activePage === 'makanan' && <KatalogMakanan namaMitra={namaMitra} />}
         {activePage === 'pengajuan' && <PengajuanPenerima namaMitra={namaMitra} />}
-        {activePage === 'laporan' && <p>Laporan (isi menyusul)</p>}
+        {activePage === 'laporan' && <LaporanMitra namaMitra={namaMitra} />}
       </main>
 
       <footer style={footerStyle}>© 2026 Surplus – Platform Distribusi Makanan Berlebih.</footer>
