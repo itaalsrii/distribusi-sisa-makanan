@@ -10,6 +10,10 @@ import KatalogMakanan from './KatalogMakanan';
 import LaporanMitra from './LaporanMitra';
 import { colors } from '../theme';
 
+// seberapa besar tampilan Beranda diperbesar (1 = ukuran asli, 1.15 = 15% lebih besar)
+// kalau masih kurang pas, ganti angkanya: 1.1 (sedikit), 1.2, atau 1.25 (besar)
+const SKALA_BERANDA = '1.15';
+
 // baca data Mitra yang lagi login (disimpan oleh Login.jsx)
 function bacaSession() {
   try {
@@ -46,9 +50,12 @@ export default function DashboardMitra() {
 
   const namaMitra = session.namaUsaha || session.nama;
 
-  // halaman Pengajuan, Katalog, dan Laporan dibuat selebar layar
+  // semua halaman dibuat selebar layar (Beranda, Pengajuan, Katalog, Laporan)
   const selebarLayar =
-    activePage === 'pengajuan' || activePage === 'makanan' || activePage === 'laporan';
+    activePage === 'home' ||
+    activePage === 'pengajuan' ||
+    activePage === 'makanan' ||
+    activePage === 'laporan';
 
   // ---------- data asli dari localStorage (dibaca ulang tiap pindah menu) ----------
   const makananMitra = bacaList('surplus_makanan').filter((m) => samaNama(m.restoran, namaMitra));
@@ -124,17 +131,25 @@ export default function DashboardMitra() {
     boxSizing: 'border-box'
   };
 
+  // pembungkus Beranda: jarak sisi 60px + diperbesar sesuai SKALA_BERANDA
+  const berandaStyle = {
+    padding: '0 60px 40px',
+    boxSizing: 'border-box',
+    zoom: SKALA_BERANDA
+  };
+
   const statGrid = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-    gap: '16px',
-    marginBottom: '20px'
+    gap: '20px',
+    marginBottom: '24px'
   };
 
+  // Status Makanan lebih lebar dari Panduan Kelayakan
   const panelGrid = {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))',
-    gap: '16px',
+    gridTemplateColumns: 'minmax(0, 3fr) minmax(0, 2fr)',
+    gap: '20px',
     alignItems: 'start'
   };
 
@@ -153,7 +168,7 @@ export default function DashboardMitra() {
 
       <main style={mainStyle}>
         {activePage === 'home' && (
-          <>
+          <div style={berandaStyle}>
             <WelcomeHero namaMitra={namaMitra} onBagikan={() => setActivePage('makanan')} />
 
             <div style={statGrid}>
@@ -172,7 +187,7 @@ export default function DashboardMitra() {
               <StatusMakanan daftarMakanan={daftarMakananTampil} />
               <PanduanKelayakan />
             </div>
-          </>
+          </div>
         )}
         {activePage === 'makanan' && <KatalogMakanan namaMitra={namaMitra} />}
         {activePage === 'pengajuan' && <PengajuanPenerima namaMitra={namaMitra} />}

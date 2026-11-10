@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { colors } from '../theme';
 
@@ -11,6 +11,7 @@ const menus = [
 
 export default function MitraNavbar({ activePage, setActivePage, namaMitra }) {
   const navigate = useNavigate();
+  const [hoverKeluar, setHoverKeluar] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem('surplus_session');
@@ -65,18 +66,20 @@ export default function MitraNavbar({ activePage, setActivePage, namaMitra }) {
     fontWeight: 'bold'
   };
 
+  // tombol Keluar: abu-abu biasa, jadi merah waktu kursor diarahkan
   const logoutStyle = {
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
-    background: 'transparent',
-    color: colors.muted,
-    border: `1px solid ${colors.border}`,
+    background: hoverKeluar ? 'rgba(197, 53, 48, 0.15)' : 'transparent',
+    color: hoverKeluar ? colors.primary : colors.muted,
+    border: `1px solid ${hoverKeluar ? colors.primary : colors.border}`,
     borderRadius: '10px',
     padding: '8px 14px',
     marginLeft: '4px',
     fontSize: '0.9rem',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    transition: 'color 0.2s, border-color 0.2s, background 0.2s'
   };
 
   return (
@@ -109,7 +112,14 @@ export default function MitraNavbar({ activePage, setActivePage, namaMitra }) {
           {namaMitra}
         </div>
 
-        <button style={logoutStyle} onClick={handleLogout}>
+        <button
+          style={logoutStyle}
+          onClick={handleLogout}
+          onMouseEnter={() => setHoverKeluar(true)}
+          onMouseLeave={() => setHoverKeluar(false)}
+          onFocus={() => setHoverKeluar(true)}
+          onBlur={() => setHoverKeluar(false)}
+        >
           <svg
             viewBox="0 0 24 24"
             width="18"
