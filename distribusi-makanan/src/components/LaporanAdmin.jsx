@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import "./LaporanAdmin.css";
@@ -7,39 +6,83 @@ import AdminProfile from "./AdminProfile";
 const CLAIMS_KEY = "surplus_klaim";
 const MAKANAN_KEY = "surplus_makanan";
 
+/* ---------- Ikon ---------- */
+
+function LogoSurplus() {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" aria-label="Logo Surplus">
+      <path
+        d="M17 7 C9 12 27 14 18 20 M29 7 C21 12 39 14 30 20 M23 4 C15 9 33 11 24 17"
+        stroke="white"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M7 31 C9 22 16 19 24 19 C32 19 39 22 41 31 Z"
+        fill="white"
+      />
+      <path
+        d="M5 34 H43 M12 38 H36"
+        stroke="white"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function IkonExcel() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+      <path d="M14 3v5h5" />
+      <path d="M9.5 12.5l5 5M14.5 12.5l-5 5" />
+    </svg>
+  );
+}
+
+function IkonPDF() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+      <path d="M14 3v5h5" />
+      <path d="M8.5 13h7M8.5 16.5h5" />
+    </svg>
+  );
+}
+
+/* ---------- Data ---------- */
+
 // Membaca data laporan dari localStorage
 const bacaLaporan = () => {
   try {
-    const dataKlaim = JSON.parse(
-      localStorage.getItem(CLAIMS_KEY) || "[]"
-    );
-
+    const dataKlaim = JSON.parse(localStorage.getItem(CLAIMS_KEY) || "[]");
     const daftarMakanan = JSON.parse(
       localStorage.getItem(MAKANAN_KEY) || "[]"
     );
 
     if (!Array.isArray(dataKlaim)) return [];
 
-    const makananList = Array.isArray(daftarMakanan)
-      ? daftarMakanan
-      : [];
+    const makananList = Array.isArray(daftarMakanan) ? daftarMakanan : [];
 
     return dataKlaim.map((item, index) => {
-      // Mencocokkan makanan berdasarkan ID
-      const makananMitra = makananList.find(
-        (m) =>
-          item.idMakanan != null &&
-          m.id != null &&
-          String(m.id) === String(item.idMakanan)
-      ) || makananList.find(
-        (m) =>
-          String(m.makanan || m.nama || "").toLowerCase() ===
-            String(item.makanan || item.namaMakanan || "").toLowerCase() &&
-          String(m.restoran || m.namaMitra || "").toLowerCase() ===
-            String(item.restoran || item.namaMitra || "").toLowerCase()
-      );
+      // Mencocokkan makanan berdasarkan ID, lalu berdasarkan nama
+      const makananMitra =
+        makananList.find(
+          (m) =>
+            item.idMakanan != null &&
+            m.id != null &&
+            String(m.id) === String(item.idMakanan)
+        ) ||
+        makananList.find(
+          (m) =>
+            String(m.makanan || m.nama || "").toLowerCase() ===
+              String(item.makanan || item.namaMakanan || "").toLowerCase() &&
+            String(m.restoran || m.namaMitra || "").toLowerCase() ===
+              String(item.restoran || item.namaMitra || "").toLowerCase()
+        );
 
-      // Mengambil nama Mitra dari data klaim atau data makanan
+      // Nama Mitra dari data klaim atau data makanan
       const namaMitra =
         item.restoran ||
         item.namaMitra ||
@@ -51,12 +94,10 @@ const bacaLaporan = () => {
 
       // Jumlah awal makanan yang disediakan Mitra
       const jumlahTersedia = Number(
-        makananMitra?.porsi ??
-        makananMitra?.jumlah ??
-        0
+        makananMitra?.porsi ?? makananMitra?.jumlah ?? 0
       );
 
-      // Menyesuaikan format harga
+      // Format harga
       const hargaAsli = item.harga;
       let harga = "Gratis";
 
@@ -70,9 +111,7 @@ const bacaLaporan = () => {
           String(hargaAsli).toLowerCase() === "gratis"
         ) {
           harga = "Gratis";
-        } else if (
-          String(hargaAsli).toLowerCase().includes("rp")
-        ) {
+        } else if (String(hargaAsli).toLowerCase().includes("rp")) {
           harga = hargaAsli;
         } else {
           harga = `Rp ${Number(hargaAsli).toLocaleString("id-ID")}`;
@@ -95,6 +134,8 @@ const bacaLaporan = () => {
     return [];
   }
 };
+
+/* ---------- Komponen ---------- */
 
 function LaporanAdmin() {
   const [laporan, setLaporan] = useState(() => bacaLaporan());
@@ -121,7 +162,7 @@ function LaporanAdmin() {
     };
   }, []);
 
-  // Pencarian berdasarkan nama penerima, Mitra, dan makanan
+  // Pencarian berdasarkan semua kolom
   const dataTersaring = useMemo(() => {
     const kata = pencarian.toLowerCase().trim();
 
@@ -136,9 +177,7 @@ function LaporanAdmin() {
         String(item.jumlah),
         item.ketersediaan,
         item.alamat,
-      ].some((nilai) =>
-        String(nilai).toLowerCase().includes(kata)
-      )
+      ].some((nilai) => String(nilai).toLowerCase().includes(kata))
     );
   }, [laporan, pencarian]);
 
@@ -172,9 +211,7 @@ function LaporanAdmin() {
     const csv = [header, ...rows]
       .map((row) =>
         row
-          .map((value) =>
-            `"${String(value).replace(/"/g, '""')}"`
-          )
+          .map((value) => `"${String(value).replace(/"/g, '""')}"`)
           .join(",")
       )
       .join("\r\n");
@@ -213,29 +250,6 @@ function LaporanAdmin() {
     { label: "Laporan", to: "/admin/laporan" },
   ];
 
-  function LogoSurplus() {
-  return (
-    <svg viewBox="0 0 48 48" fill="none" aria-label="Logo Surplus">
-      <path
-        d="M17 7 C9 12 27 14 18 20 M29 7 C21 12 39 14 30 20 M23 4 C15 9 33 11 24 17"
-        stroke="white"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M7 31 C9 22 16 19 24 19 C32 19 39 22 41 31 Z"
-        fill="white"
-      />
-      <path
-        d="M5 34 H43 M12 38 H36"
-        stroke="white"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
   return (
     <div className="users-page">
       <header className="users-navbar">
@@ -251,9 +265,7 @@ function LaporanAdmin() {
             <Link
               key={item.to}
               to={item.to}
-              className={
-                location.pathname === item.to ? "active" : ""
-              }
+              className={location.pathname === item.to ? "active" : ""}
             >
               {item.label}
             </Link>
@@ -274,9 +286,7 @@ function LaporanAdmin() {
 
           <div className="laporan-heading-copy">
             <h1>Laporan &amp; Ekspor Rekapitulasi</h1>
-            <p>
-              Lihat dan unduh rekapitulasi penyaluran makanan
-            </p>
+            <p>Lihat dan unduh rekapitulasi penyaluran makanan</p>
           </div>
 
           <div className="laporan-export-actions">
@@ -285,7 +295,10 @@ function LaporanAdmin() {
               className="laporan-export excel"
               onClick={unduhCSV}
             >
-              <span aria-hidden="true">▧</span> Unduh Excel
+              <span className="laporan-export-icon">
+                <IkonExcel />
+              </span>
+              Unduh Excel
             </button>
 
             <button
@@ -293,17 +306,17 @@ function LaporanAdmin() {
               className="laporan-export pdf"
               onClick={unduhPDF}
             >
-              <span aria-hidden="true">▤</span> Unduh PDF
+              <span className="laporan-export-icon">
+                <IkonPDF />
+              </span>
+              Unduh PDF
             </button>
           </div>
         </section>
 
         <div className="laporan-toolbar">
           <label className="laporan-search">
-            <span
-              className="laporan-search-icon"
-              aria-hidden="true"
-            >
+            <span className="laporan-search-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24">
                 <circle cx="10.8" cy="10.8" r="6.8" />
                 <path d="m16 16 5 5" />
@@ -314,9 +327,7 @@ function LaporanAdmin() {
               type="search"
               placeholder="Cari laporan..."
               value={pencarian}
-              onChange={(event) =>
-                setPencarian(event.target.value)
-              }
+              onChange={(event) => setPencarian(event.target.value)}
               aria-label="Cari laporan"
             />
           </label>

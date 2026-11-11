@@ -11,10 +11,10 @@
 .login-card {
   width: 100%;
   max-width: 520px;
-  background: #16171a;
+  background: #16171B;
   border-radius: 20px;
   padding: 28px 32px;
-  color: #ffffff;
+  color: #FFFFFF;
   text-align: left;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 }
@@ -28,7 +28,7 @@
   width: 56px;
   height: 56px;
   margin: 0 auto 6px;
-  background: #c53530;
+  background: #DC2626;
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -42,14 +42,14 @@
 
 .login-brand {
   margin: 0;
-  color: #c53530;
+  color: #DC2626;
   font-size: 24px;
   font-weight: 700;
 }
 
 .login-title {
   margin: 4px 0 0;
-  color: #ffffff;
+  color: #FFFFFF;
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 1px;
@@ -57,7 +57,7 @@
 
 .login-subtitle {
   margin: 6px 0 0;
-  color: #ffffff;
+  color: #FFFFFF;
   font-size: 13px;
   font-weight: 400;
 }
@@ -74,6 +74,7 @@
   font-size: 13px;
   font-weight: 500;
   margin-bottom: 6px;
+  color: #FFFFFF;
 }
 
 .login-card .form-group input {
@@ -83,7 +84,7 @@
   border-radius: 8px;
   padding: 10px 12px;
   font-size: 14px;
-  color: #ffffff;
+  color: #FFFFFF;
   outline: none;
   font-family: inherit;
 }
@@ -93,7 +94,7 @@
 }
 
 .login-card .form-group input:focus {
-  border-color: #c53530;
+  border-color: #DC2626;
 }
 
 .login-card .password-wrap {
@@ -121,7 +122,7 @@
 }
 
 .login-card .toggle-eye:hover {
-  color: #ffffff;
+  color: #FFFFFF;
 }
 
 .login-card .toggle-eye svg {
@@ -138,8 +139,8 @@
 
 .btn-login {
   width: 100%;
-  background: #c53530;
-  color: #ffffff;
+  background: #DC2626;
+  color: #FFFFFF;
   border: none;
   border-radius: 8px;
   padding: 12px;
@@ -151,7 +152,7 @@
 }
 
 .btn-login:hover {
-  background: #a82b27;
+  background: #B91C1C;
 }
 
 .login-footer {
@@ -163,7 +164,7 @@
 }
 
 .login-footer a {
-  color: #e04b46;
+  color: #DC2626;
   font-weight: 600;
   text-decoration: none;
 }

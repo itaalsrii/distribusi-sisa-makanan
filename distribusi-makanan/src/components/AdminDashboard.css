@@ -5,8 +5,8 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #16171A;
-  color: #F5F5F5;
+  background: #16171B;
+  color: #D9D9D9;
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -36,14 +36,14 @@
   align-items: center;
   justify-content: center;
   border-radius: 9px;
-  background: #E52529;
+  background: #DC2626;
   overflow: hidden;
 }
 
 .admin-brand-icon svg { width: 35px; height: 35px; }
 
 .admin-brand > span {
-  color: #E52529;
+  color: #DC2626;
   font-size: 18px;
   font-weight: 700;
 }
@@ -70,7 +70,7 @@
 .admin-nav-link:hover { background: #3A3A3D; }
 
 .admin-nav-link.active {
-  background: #E52529;
+  background: #DC2626;
   color: #FFF;
 }
 
@@ -167,7 +167,7 @@
 .stat-icon {
   width: 32px;
   flex-shrink: 0;
-  color: #E52529;
+  color: #DC2626;
   font-size: 28px;
   line-height: 1;
   text-align: center;
@@ -238,7 +238,7 @@
   transition: background .2s ease;
 }
 
-.chart-bar:hover { background: #E52529; }
+.chart-bar:hover { background: #DC2626; }
 
 .activity-panel { padding: 14px; }
 .activity-panel h2 { font-size: 16px; }
