@@ -33,7 +33,7 @@ const samaNama = (a, b) =>
 
 const kunciMitra = (nama) => String(nama || '').trim().toLowerCase();
 
-// porsi yang sudah diklaim = semua klaim makanan ini yang tidak ditolak (rumus sama dengan halaman penerima)
+// porsi yang sudah diklaim 
 const hitungTerklaim = (klaim, idMakanan) =>
   klaim
     .filter((k) => k.idMakanan === idMakanan && k.status !== 'Ditolak')
@@ -60,7 +60,7 @@ export default function KatalogMakanan({ namaMitra }) {
   const [itemHapus, setItemHapus] = useState(null);
   const [form, setForm] = useState(formAwal);
   const [gambar, setGambar] = useState(null);
-  const [inputKey, setInputKey] = useState(0); // buat reset input file
+  const [inputKey, setInputKey] = useState(0); // reset input file
   const [error, setError] = useState('');
 
   // state pengaturan pembayaran
@@ -83,7 +83,7 @@ export default function KatalogMakanan({ namaMitra }) {
     };
   }, []);
 
-  // tiap Mitra hanya lihat makanan miliknya, terbaru di atas
+  // tiap Mitra hanya lihat makanan miliknya
   const makananMitra = semuaMakanan
     .filter((m) => samaNama(m.restoran, namaMitra))
     .reverse();
@@ -194,7 +194,7 @@ export default function KatalogMakanan({ namaMitra }) {
   const simpanBayar = (e) => {
     e.preventDefault();
 
-    // nomor VA boleh kosong, tapi kalau diisi harus angka saja (8-20 digit)
+    // nomor VA boleh kosong
     const bersih = {};
     for (const bank of BANKS) {
       const nilai = String(vaForm[bank] || '').replace(/\s/g, '');
@@ -206,7 +206,6 @@ export default function KatalogMakanan({ namaMitra }) {
     }
 
     try {
-      // baca ulang dulu supaya tidak menimpa data Mitra lain / tab lain
       const semua = bacaObjek(KEY_PEMBAYARAN);
       semua[kunciMitra(namaMitra)] = { virtualAccount: bersih, qris: qris };
       localStorage.setItem(KEY_PEMBAYARAN, JSON.stringify(semua));
@@ -233,7 +232,6 @@ export default function KatalogMakanan({ namaMitra }) {
       return;
     }
 
-    // jangan sampai total porsi lebih kecil dari yang sudah diklaim penerima
     if (editId !== null) {
       const terklaim = hitungTerklaim(bacaList(KEY_KLAIM), editId);
       if (Number(form.porsi) < terklaim) {
@@ -256,7 +254,7 @@ export default function KatalogMakanan({ namaMitra }) {
     };
 
     try {
-      // baca ulang dulu supaya tidak menimpa data dari tab lain
+
       const terbaru = bacaList(KEY_MAKANAN);
       if (editId !== null) {
         simpanKeStorage(terbaru.map((m) => (m.id === editId ? { ...m, ...data } : m)));
@@ -274,7 +272,7 @@ export default function KatalogMakanan({ namaMitra }) {
     tutupModal();
   };
 
-  // ---------- style ----------
+
   const bannerStyle = {
     display: 'flex',
     alignItems: 'center',

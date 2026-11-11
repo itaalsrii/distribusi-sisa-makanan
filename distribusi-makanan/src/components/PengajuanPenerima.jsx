@@ -30,7 +30,7 @@ function bacaKlaim() {
 const samaNama = (a, b) =>
   String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 
-// tanggal diambil dari id klaim (Penerima.jsx membuat id = Date.now() + '-' + idMakanan)
+// tanggal diambil dari id klaim 
 function formatTanggal(id) {
   const waktu = parseInt(String(id).split('-')[0], 10);
   if (!waktu) return '-';
@@ -43,16 +43,15 @@ function formatHarga(klaim) {
   return total === 0 ? 'Gratis' : `Rp ${total.toLocaleString('id-ID')}`;
 }
 
-// klaim lama (sebelum Penerima dipisah) masih pakai field "metode"
 const metodeAmbil = (k) => k.metodePengambilan || k.metode || '-';
 const metodeBayar = (k) => k.metodePembayaran || (Number(k.harga || 0) === 0 ? 'Gratis' : k.metode || '-');
 const perluVerifikasi = (k) => ['QRIS', 'Virtual Account'].includes(metodeBayar(k));
 
 export default function PengajuanPenerima({ namaMitra }) {
   const [semuaKlaim, setSemuaKlaim] = useState(bacaKlaim);
-  const [buktiTerbuka, setBuktiTerbuka] = useState(null); // klaim yang buktinya lagi dilihat
+  const [buktiTerbuka, setBuktiTerbuka] = useState(null); 
 
-  // update otomatis kalau tab lain (halaman penerima) menambah klaim baru
+  // update otomatis kalau halaman penerima menambah klaim baru
   useEffect(() => {
     const onStorage = (e) => {
       if (e.key === KEY_KLAIM) setSemuaKlaim(bacaKlaim());
@@ -61,12 +60,12 @@ export default function PengajuanPenerima({ namaMitra }) {
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
-  // tiap Mitra hanya melihat klaim untuk restorannya sendiri, terbaru di atas
+  // tiap Mitra hanya melihat klaim untuk restorannya sendiri
   const klaimMitra = semuaKlaim
     .filter((k) => samaNama(k.restoran, namaMitra))
     .reverse();
 
-  // simpan perubahan satu klaim. Baca ulang dulu supaya tidak menimpa klaim baru dari tab lain
+  // simpan perubahan satu klaim. 
   const ubahKlaim = (id, perubahan) => {
     const terbaru = bacaKlaim().map((k) => (k.id === id ? { ...k, ...perubahan } : k));
     localStorage.setItem(KEY_KLAIM, JSON.stringify(terbaru));
@@ -78,7 +77,6 @@ export default function PengajuanPenerima({ namaMitra }) {
 
   const verifikasiPembayaran = (id) => ubahKlaim(id, { statusPembayaran: 'Terverifikasi' });
 
-  // tolak pembayaran = klaim ikut ditolak, jadi stok porsinya otomatis balik di halaman penerima
   const tolakPembayaran = (klaim) => {
     const yakin = window.confirm(
       `Tolak pembayaran dari ${klaim.nama}? Klaim akan dibatalkan dan stok porsi dikembalikan.`
@@ -87,7 +85,6 @@ export default function PengajuanPenerima({ namaMitra }) {
     ubahKlaim(klaim.id, { statusPembayaran: 'Ditolak', status: 'Ditolak' });
   };
 
-  // ---------- style ----------
   const bannerStyle = {
     display: 'flex',
     alignItems: 'center',
@@ -276,8 +273,6 @@ export default function PengajuanPenerima({ namaMitra }) {
                 const bayar = metodeBayar(klaim);
                 const adaVerifikasi = perluVerifikasi(klaim);
                 const statusBayar = klaim.statusPembayaran || 'Menunggu Verifikasi';
-
-                // kalau status saat ini belum ada di daftar (misal "Menunggu Konfirmasi"), tampilkan juga
                 const opsi = OPSI_STATUS.includes(klaim.status)
                   ? OPSI_STATUS
                   : [klaim.status, ...OPSI_STATUS];

@@ -15,7 +15,6 @@ function bacaKlaim() {
 const samaNama = (a, b) =>
   String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 
-// waktu klaim diambil dari id (Date.now()-idMakanan), cadangan dari waktuKlaim
 function waktuKlaim(k) {
   const w = parseInt(String(k.id).split('-')[0], 10);
   if (w) return w;
@@ -23,7 +22,6 @@ function waktuKlaim(k) {
   return Number.isNaN(t) ? 0 : t;
 }
 
-// format 2026-09-26 18:30 (sesuai Figma)
 function formatWaktu(k) {
   const w = waktuKlaim(k);
   if (!w) return '-';
@@ -34,16 +32,13 @@ function formatWaktu(k) {
 
 const nominalKlaim = (k) => Number(k.harga || 0) * Number(k.jumlah || 1);
 
-// format Nominal sesuai Figma: "Rp 20.000" atau "Rp 0 (Gratis)"
 const formatNominal = (k) => {
   const total = nominalKlaim(k);
   return total === 0 ? 'Rp 0 (Gratis)' : `Rp ${total.toLocaleString('id-ID')}`;
 };
 
-// alamat penerima (klaim lama mungkin belum punya)
 const alamatKlaim = (k) => k.alamatPenerima || '-';
 
-// escape supaya nama penerima/makanan/alamat aman masuk ke HTML
 const esc = (teks) =>
   String(teks ?? '')
     .replace(/&/g, '&amp;')
@@ -54,7 +49,7 @@ const esc = (teks) =>
 export default function LaporanMitra({ namaMitra }) {
   const [semuaKlaim, setSemuaKlaim] = useState(bacaKlaim);
 
-  // update otomatis kalau klaim berubah (tab lain atau halaman ini)
+  // update otomatis kalau klaim berubah
   useEffect(() => {
     const muat = () => setSemuaKlaim(bacaKlaim());
     window.addEventListener('storage', muat);
@@ -65,7 +60,7 @@ export default function LaporanMitra({ namaMitra }) {
     };
   }, []);
 
-  // rekapitulasi penyaluran = klaim milik Mitra ini yang sudah Selesai, terbaru di atas
+  // rekapitulasi penyaluran 
   const baris = semuaKlaim
     .filter((k) => samaNama(k.restoran, namaMitra) && k.status === 'Selesai')
     .sort((a, b) => waktuKlaim(b) - waktuKlaim(a));
@@ -83,8 +78,6 @@ export default function LaporanMitra({ namaMitra }) {
   const namaFile = (ekstensi) =>
     `rekap-penyaluran-${String(namaMitra).trim().toLowerCase().replace(/\s+/g, '-')}-${tanggalCetak()}.${ekstensi}`;
 
-  // ---------- Unduh Excel ----------
-  // tabel HTML disimpan sebagai .xls, Excel bisa langsung membukanya
   const unduhExcel = () => {
     const isiBaris = baris
       .map(
@@ -125,8 +118,6 @@ export default function LaporanMitra({ namaMitra }) {
     URL.revokeObjectURL(url);
   };
 
-  // ---------- Unduh PDF ----------
-  // buka dialog cetak browser dengan halaman rapi, pilih "Save as PDF" / "Simpan sebagai PDF"
   const unduhPdf = () => {
     const isiBaris = baris
       .map(
@@ -180,7 +171,6 @@ export default function LaporanMitra({ namaMitra }) {
         </body>
       </html>`;
 
-    // iframe tersembunyi supaya tidak diblok pop-up blocker
     const iframe = document.createElement('iframe');
     iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
     document.body.appendChild(iframe);
@@ -196,7 +186,6 @@ export default function LaporanMitra({ namaMitra }) {
     }, 300);
   };
 
-  // ---------- style ----------
   const bannerStyle = {
     display: 'flex',
     alignItems: 'center',

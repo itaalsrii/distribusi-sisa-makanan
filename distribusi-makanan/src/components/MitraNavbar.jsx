@@ -66,7 +66,6 @@ export default function MitraNavbar({ activePage, setActivePage, namaMitra }) {
     fontWeight: 'bold'
   };
 
-  // tombol Keluar: abu-abu biasa, jadi merah waktu kursor diarahkan
   const logoutStyle = {
     display: 'flex',
     alignItems: 'center',

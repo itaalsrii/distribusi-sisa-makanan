@@ -10,8 +10,6 @@ import KatalogMakanan from './KatalogMakanan';
 import LaporanMitra from './LaporanMitra';
 import { colors } from '../theme';
 
-// seberapa besar tampilan Beranda diperbesar (1 = ukuran asli, 1.15 = 15% lebih besar)
-// kalau masih kurang pas, ganti angkanya: 1.1 (sedikit), 1.2, atau 1.25 (besar)
 const SKALA_BERANDA = '1.15';
 
 // baca data Mitra yang lagi login (disimpan oleh Login.jsx)
@@ -50,7 +48,6 @@ export default function DashboardMitra() {
 
   const namaMitra = session.namaUsaha || session.nama;
 
-  // semua halaman dibuat selebar layar (Beranda, Pengajuan, Katalog, Laporan)
   const selebarLayar =
     activePage === 'home' ||
     activePage === 'pengajuan' ||
@@ -61,7 +58,7 @@ export default function DashboardMitra() {
   const makananMitra = bacaList('surplus_makanan').filter((m) => samaNama(m.restoran, namaMitra));
   const klaimMitra = bacaList('surplus_klaim').filter((k) => samaNama(k.restoran, namaMitra));
 
-  // klaim yang ditolak nggak dihitung (porsinya balik ke stok)
+  // klaim yang ditolak nggak dihitung 
   const klaimAktif = klaimMitra.filter((k) => k.status !== 'Ditolak');
   const klaimSelesai = klaimAktif.filter((k) => k.status === 'Selesai');
   const klaimBerjalan = klaimAktif.filter((k) => k.status !== 'Selesai');
@@ -71,9 +68,6 @@ export default function DashboardMitra() {
     0
   );
 
-  // panel Status Makanan: tiap makanan bisa punya 2 baris
-  // - porsi yang SUDAH disalurkan (klaim Selesai)
-  // - porsi yang SEDANG tersalurkan (klaim belum Selesai)
   const daftarMakanan = [];
   [...makananMitra].reverse().forEach((m) => {
     const klaimMakanan = klaimAktif.filter((k) => k.idMakanan === m.id);
@@ -131,7 +125,6 @@ export default function DashboardMitra() {
     boxSizing: 'border-box'
   };
 
-  // pembungkus Beranda: jarak sisi 60px + diperbesar sesuai SKALA_BERANDA
   const berandaStyle = {
     padding: '0 60px 40px',
     boxSizing: 'border-box',
@@ -145,7 +138,6 @@ export default function DashboardMitra() {
     marginBottom: '24px'
   };
 
-  // Status Makanan lebih lebar dari Panduan Kelayakan
   const panelGrid = {
     display: 'grid',
     gridTemplateColumns: 'minmax(0, 3fr) minmax(0, 2fr)',
