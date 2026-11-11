@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import "./DataMakananAdmin.css";
@@ -6,6 +5,72 @@ import AdminProfile from "./AdminProfile";
 
 const MAKANAN_KEY = "surplus_makanan";
 const KLAIM_KEY = "surplus_klaim";
+
+/* ---------- Ikon ---------- */
+
+function LogoSurplus() {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" aria-label="Logo Surplus">
+      <path
+        d="M17 7 C9 12 27 14 18 20 M29 7 C21 12 39 14 30 20 M23 4 C15 9 33 11 24 17"
+        stroke="white"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M7 31 C9 22 16 19 24 19 C32 19 39 22 41 31 Z"
+        fill="white"
+      />
+      <path
+        d="M5 34 H43 M12 38 H36"
+        stroke="white"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+// Logo buku catatan merah dengan tudung saji (cloche) untuk judul Kelola Data Makanan
+function IkonMakanan() {
+  return (
+    <svg viewBox="0 0 44 50" aria-hidden="true">
+      {/* Sampul buku */}
+      <rect width="44" height="50" rx="4" fill="#E52529" />
+
+      {/* Garis jilid */}
+      <path d="M11.5 3v44" stroke="#000" strokeOpacity="0.18" strokeWidth="1" />
+
+      {/* Cincin spiral */}
+      <g stroke="#FFF" strokeWidth="2.2" strokeLinecap="round">
+        <path d="M3 8h7M3 16.5h7M3 25h7M3 33.5h7M3 42h7" />
+      </g>
+
+      {/* Tudung saji */}
+      <circle cx="27.5" cy="16.2" r="1.7" fill="#FFF" />
+      <path d="M16.5 29a11 11 0 0 1 22 0z" fill="#FFF" />
+      <path
+        d="M21 27.5a6.5 6.5 0 0 1 4.5-5.5"
+        fill="none"
+        stroke="#E52529"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      <rect x="13.5" y="31.5" width="28" height="2.6" rx="1.3" fill="#FFF" />
+    </svg>
+  );
+}
+
+function IkonCari() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="10.8" cy="10.8" r="6.8" />
+      <path d="m16 16 5 5" />
+    </svg>
+  );
+}
+
+/* ---------- Data ---------- */
 
 // Membaca data makanan dari localStorage
 const bacaMakanan = () => {
@@ -62,6 +127,8 @@ const formatHarga = (harga) => {
 
   return `Rp ${Number(harga).toLocaleString("id-ID")}`;
 };
+
+/* ---------- Komponen ---------- */
 
 function DashboardMakanan() {
   const [makanan, setMakanan] = useState(() => bacaMakanan());
@@ -125,9 +192,7 @@ function DashboardMakanan() {
         item.ketersediaan,
         String(hitungTersalurkan(item)),
         item.alamat,
-      ].some((nilai) =>
-        String(nilai).toLowerCase().includes(keyword)
-      )
+      ].some((nilai) => String(nilai).toLowerCase().includes(keyword))
     );
   }, [makanan, klaim, pencarian]);
 
@@ -137,13 +202,10 @@ function DashboardMakanan() {
       return;
     }
 
-    const daftarAsli = JSON.parse(
-      localStorage.getItem(MAKANAN_KEY) || "[]"
-    );
+    const daftarAsli = JSON.parse(localStorage.getItem(MAKANAN_KEY) || "[]");
 
     const daftarBaru = daftarAsli.filter(
-      (item, index) =>
-        String(item.id ?? `makanan-${index}`) !== String(id)
+      (item, index) => String(item.id ?? `makanan-${index}`) !== String(id)
     );
 
     simpanMakanan(daftarBaru);
@@ -157,10 +219,7 @@ function DashboardMakanan() {
 
     const harga = window.prompt(
       "Harga makanan (isi 0 jika gratis):",
-      String(item.harga === "Gratis" ? 0 : item.harga).replace(
-        /^Rp\s*/i,
-        ""
-      )
+      String(item.harga === "Gratis" ? 0 : item.harga).replace(/^Rp\s*/i, "")
     );
 
     if (harga === null || !harga.trim()) return;
@@ -183,9 +242,7 @@ function DashboardMakanan() {
 
     if (alamat === null || !alamat.trim()) return;
 
-    const daftarAsli = JSON.parse(
-      localStorage.getItem(MAKANAN_KEY) || "[]"
-    );
+    const daftarAsli = JSON.parse(localStorage.getItem(MAKANAN_KEY) || "[]");
 
     const indexMakanan = daftarAsli.findIndex(
       (data, index) =>
@@ -220,29 +277,6 @@ function DashboardMakanan() {
     { label: "Laporan", to: "/admin/laporan" },
   ];
 
-  function LogoSurplus() {
-  return (
-    <svg viewBox="0 0 48 48" fill="none" aria-label="Logo Surplus">
-      <path
-        d="M17 7 C9 12 27 14 18 20 M29 7 C21 12 39 14 30 20 M23 4 C15 9 33 11 24 17"
-        stroke="white"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M7 31 C9 22 16 19 24 19 C32 19 39 22 41 31 Z"
-        fill="white"
-      />
-      <path
-        d="M5 34 H43 M12 38 H36"
-        stroke="white"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
   return (
     <div className="users-page">
       <header className="users-navbar">
@@ -273,7 +307,7 @@ function DashboardMakanan() {
       <main className="makanan-main">
         <section className="makanan-titlebar">
           <div className="makanan-title-icon" aria-hidden="true">
-            ▰
+            <IkonMakanan />
           </div>
 
           <div>
@@ -285,7 +319,7 @@ function DashboardMakanan() {
         <div className="makanan-toolbar">
           <label className="makanan-search">
             <span className="makanan-search-icon" aria-hidden="true">
-              ⌕
+              <IkonCari />
             </span>
 
             <input
@@ -321,7 +355,6 @@ function DashboardMakanan() {
                     <tr key={item.id}>
                       <td>{item.nama}</td>
                       <td>{formatHarga(item.harga)}</td>
-
                       <td>{hitungTersalurkan(item)} porsi</td>
 
                       {/* Tetap menampilkan jumlah awal dari Mitra */}
@@ -339,7 +372,8 @@ function DashboardMakanan() {
                             title="Edit"
                           >
                             <svg viewBox="0 0 24 24" aria-hidden="true">
-                              <path d="M12 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9M15 3l6 6M10 14l-1 4 4-1L22 8l-5-5z" />
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                             </svg>
                           </button>
 

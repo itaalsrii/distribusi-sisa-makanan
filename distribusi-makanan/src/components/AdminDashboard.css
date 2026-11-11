@@ -145,6 +145,7 @@
   line-height: 1.5;
 }
 
+/* ---------- Kartu statistik ---------- */
 .admin-stats {
   display: flex;
   justify-content: space-between;
@@ -164,14 +165,31 @@
   background: #353539;
 }
 
+/* Ikon SVG di dalam kotak berwarna */
 .stat-icon {
-  width: 32px;
-  flex-shrink: 0;
-  color: #DC2626;
-  font-size: 28px;
-  line-height: 1;
-  text-align: center;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: #FFF;
+  font-size: 0;
 }
+
+.stat-icon svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.food-stat-icon { background: #DC2626; }
+.partner-stat-icon { background: #DC2626; }
+.receiver-stat-icon { background: #DC2626; }
 
 .admin-stat-card p {
   margin: 0 0 5px;
@@ -186,6 +204,7 @@
   font-weight: 700;
 }
 
+/* ---------- Panel ---------- */
 .admin-dashboard-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
@@ -207,39 +226,116 @@
   font-weight: 700;
 }
 
+/* ---------- Grafik distribusi ---------- */
 .chart-panel {
   min-height: 200px;
   display: flex;
   flex-direction: column;
 }
 
-.chart-area {
-  flex: 1;
-  min-height: 150px;
-  padding: 15px 8%;
-  display: flex;
-  align-items: flex-end;
+.chart-panel h2 { margin-bottom: 0; }
+
+.chart-subtitle {
+  margin: 4px 0 0;
+  color: #B8B8BC;
+  font-size: 12px;
 }
 
-.chart-bars {
-  width: 100%;
+.chart-area {
+  margin-top: 18px;
+  padding: 14px 0 0;
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  grid-template-rows: 190px auto;
+  column-gap: 8px;
+  row-gap: 8px;
+}
+
+.chart-yaxis {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  color: #B8B8BC;
+  font-size: 11px;
+  line-height: 0;
+}
+
+.chart-plot {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
+  border-left: 1px solid #48484C;
+  border-bottom: 1px solid #48484C;
+}
+
+.chart-grid {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.chart-grid i {
+  display: block;
+  height: 0;
+  border-top: 1px dashed #38383C;
+}
+
+.chart-cols {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  padding: 0 8px;
+}
+
+.chart-col {
+  position: relative;
   height: 100%;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 5px;
 }
 
-.chart-bar {
-  min-width: 0;
-  flex: 1;
-  border-radius: 4px 4px 0 0;
-  background: #77777D;
-  transition: background .2s ease;
+.chart-bar-fill {
+  width: 100%;
+  max-width: 34px;
+  border-radius: 5px 5px 0 0;
+  background: linear-gradient(180deg, #EF4444, #DC2626);
+  transition: height 0.3s ease, filter 0.15s;
 }
 
-.chart-bar:hover { background: #DC2626; }
+.chart-col:hover .chart-bar-fill { filter: brightness(1.15); }
 
+.chart-value {
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: #F5F5F5;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.chart-xaxis {
+  grid-column: 2;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  padding: 0 8px;
+  color: #B8B8BC;
+  font-size: 11px;
+  text-align: center;
+}
+
+/* ---------- Aktivitas terbaru ---------- */
 .activity-panel { padding: 14px; }
 .activity-panel h2 { font-size: 16px; }
 
@@ -302,6 +398,7 @@
   text-align: center;
 }
 
+/* ---------- Responsif ---------- */
 @media (max-width: 900px) {
   .admin-navbar {
     align-items: flex-start;
@@ -362,10 +459,15 @@
 
   .admin-stat-card { width: 100%; }
 
-  .chart-area {
-    padding-right: 5%;
-    padding-left: 5%;
+  .chart-area { grid-template-rows: 160px auto; }
+
+  .chart-cols,
+  .chart-xaxis {
+    gap: 4px;
+    padding: 0 4px;
   }
+
+  .chart-xaxis { font-size: 10px; }
 
   .activity-table { min-width: 400px; }
 }

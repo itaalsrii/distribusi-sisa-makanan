@@ -10,16 +10,27 @@
 .makanan-profile { min-width:44px; display:flex; flex-direction:column; align-items:center; gap:2px; color:#F5F5F5; font-size:11px; }
 .makanan-avatar { width:22px; height:22px; display:grid; place-items:center; border:2px solid #DADADD; border-radius:50%; color:#DADADD; font-size:11px; }
 .makanan-main { flex:1; padding:18px 22px 24px; }
+
+/* Judul halaman */
 .makanan-titlebar { min-height:70px; display:flex; align-items:center; gap:12px; padding:12px 14px; background:#29292C; border:1px solid #38383C; border-radius:7px; }
-.makanan-title-icon { width:36px; height:38px; display:grid; place-items:center; flex-shrink:0; color:#FFF; background:#E52529; border-radius:6px; font-size:22px; }
+
+/* Logo buku catatan + tudung saji (SVG sudah membawa kotak merahnya sendiri) */
+.makanan-title-icon { width:40px; height:46px; flex:0 0 40px; display:block; background:transparent; border-radius:0; }
+.makanan-title-icon svg { display:block; width:100%; height:100%; }
+
 .makanan-titlebar h1 { margin:0 0 4px; font-size:22px; line-height:1.2; }
 .makanan-titlebar p { margin:0; color:#B8B8BC; font-size:13px; }
+
+/* Pencarian */
 .makanan-toolbar { display:flex; justify-content:flex-end; padding:14px 0; }
 .makanan-search { width:220px; min-height:36px; display:flex; align-items:center; overflow:hidden; border:1px solid #48484C; border-radius:7px; background:#29292C; }
 .makanan-search:focus-within { border-color:#E52529; }
-.makanan-search-icon { width:34px; height:34px; display:grid; place-items:center; flex:0 0 34px; color:#DADADD; font-size:22px; }
+.makanan-search-icon { width:34px; height:34px; display:grid; place-items:center; flex:0 0 34px; color:#DADADD; }
+.makanan-search-icon svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; }
 .makanan-search input { width:100%; min-width:0; padding:0 9px; border:0; outline:0; color:#FFF; background:transparent; font:13px Arial,Helvetica,sans-serif; }
 .makanan-search input::placeholder { color:#B8B8BC; }
+
+/* Tabel */
 .makanan-table-panel { min-height:200px; overflow:hidden; background:#29292C; border:1px solid #48484C; border-radius:7px; }
 .makanan-table-scroll { width:100%; overflow-x:auto; }
 .makanan-table { width:100%; min-width:600px; border-collapse:collapse; table-layout:fixed; text-align:center; font-size:12px; color:#E1E1E3; }
@@ -33,4 +44,5 @@
 .makanan-action-btn svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
 .makanan-empty { padding:25px!important; color:#B8B8BC!important; text-align:center; }
 .makanan-footer { padding:18px 10px; background:#29292C; border-top:1px solid #38383C; color:#B8B8BC; text-align:center; font-size:12px; }
+
 @media(max-width:760px){ .makanan-navbar{flex-wrap:wrap;gap:10px;padding:12px}.makanan-nav{order:3;width:100%;justify-content:flex-start;flex-wrap:wrap;margin-left:0;gap:5px}.makanan-profile{margin-left:auto}.makanan-main{padding:12px}.makanan-titlebar h1{font-size:19px}.makanan-search{width:min(220px,100%)} }
